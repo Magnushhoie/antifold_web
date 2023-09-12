@@ -24,7 +24,7 @@ def cmdline_args():
     usage = f"""
     # Predict on example PDBs in folder
     python src/antifold.py \
-    --pdb_csv data/pdbs.csv \
+    --pdb_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
     --out_dir output/
     """
@@ -71,6 +71,8 @@ def cmdline_args():
         default=1,
         help="Batch-size to use",
     )
+
+    return p.parse_args()
 
 
 def load_IF1_checkpoint(model, checkpoint_path: str = ""):
@@ -350,7 +352,7 @@ def main(args):
     # Antifold + SAB
     csv_pdbs = "/home/maghoi/repos/novo_new/data/single_pdb.csv"
     out_dir = "/home/maghoi/repos/novo_new/data/antifold"
-    _ = predict_and_save(model, args.pdb_csv, args.out_dir, args.batch_size)
+    _ = predict_and_save(model, args.pdb_csv, args.pdb_dir, args.out_dir, args.batch_size)
 
 
 if __name__ == "__main__":
