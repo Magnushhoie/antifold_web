@@ -113,7 +113,7 @@ class InverseData(torch.utils.data.Dataset):
             sys.exit(1)
 
         if verbose:
-            log.info(f"Populating {len(df)-1} PDBs from {pdb_csv}")
+            log.info(f"Populating {len(df)} PDBs from {pdb_csv}")
 
         # Create list of PDB paths and check that they exist
         pdb_path_list = []
