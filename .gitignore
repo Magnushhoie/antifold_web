@@ -1,4 +1,5 @@
 models/*.pt
+*.zip
 config*
 bak/
 old/

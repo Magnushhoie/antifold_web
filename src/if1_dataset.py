@@ -95,7 +95,7 @@ class InverseData(torch.utils.data.Dataset):
             pdb_csv: path to csv file containing pdb, Hchain and Lchain
         """
 
-        if not os.path.exist(pdb_csv):
+        if not os.path.exists(pdb_csv):
             log.error(f"Unable to find pdb_csv {pdb_csv}")
             sys.exit(1)
 
@@ -130,6 +130,7 @@ class InverseData(torch.utils.data.Dataset):
 
         # PDB info dict
         df.index = pdb_path_list
+        df["pdb_path"] = pdb_path_list
         pdb_info_dict = df.to_dict("index")
         self.pdb_info_dict = pdb_info_dict
 

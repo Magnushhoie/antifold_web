@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT_PATH = str(Path(os.getcwd()))
 sys.path.insert(0, ROOT_PATH)
+sys.path.insert(0, "src/")
 
 import re
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -14,8 +15,7 @@ import pandas as pd
 import torch
 
 import esm
-import esm_util_custom
-from esm_util_custom import Alphabet, CoordBatchConverter_mask_gpu
+from esm_util_custom import CoordBatchConverter_mask_gpu
 from if1_dataset import InverseData
 
 
@@ -156,7 +156,7 @@ def get_dataset_pdb_name_res_posins_chains(dataset, idx):
 def logits_to_seqprobs_list(logits, tokens):
     """Convert logits (bs x 35 x L) ot list of L x 20 seqprobs"""
 
-    alphabet = esm_util_custom.Alphabet.from_architecture("invariant_gvp")
+    alphabet = esm.data.Alphabet.from_architecture("invariant_gvp")
 
     mask_gap = tokens[:, 1:] != 30  # 30 is gap
     mask_pad = tokens[:, 1:] != alphabet.padding_idx  # 1 is padding
@@ -172,20 +172,17 @@ def logits_to_seqprobs_list(logits, tokens):
     return seqprobs_list
 
 
-def get_dataset_dataloader(csv_pdbs, batch_size):
+def get_dataset_dataloader(csv_pdbs, pdb_dir, batch_size):
     """Prepares dataset/dataoader from CSV file containing PDB paths and H/L chains"""
 
     # Load PDB coordinates
     dataset = InverseData(
-        span_masking_flag=False,
-        shotgun_masking_flag=False,
-        cdr_masking_flag=False,
         gaussian_noise_flag=False,
     )
-    dataset.populate(csv_file=csv_pdbs)
+    dataset.populate(csv_pdbs, pdb_dir)
 
     # Prepare torch dataloader at specified batch size
-    alphabet = esm_util_custom.Alphabet.from_architecture("invariant_gvp")
+    alphabet = esm.data.Alphabet.from_architecture("invariant_gvp")
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,
@@ -278,7 +275,7 @@ def predictions_list_to_df_probs_list(all_seqprobs_list, dataset, dataloader):
         assert len(seq_probs) == len(pdb_posins)
 
         # DataFrame
-        alphabet = esm_util_custom.Alphabet.from_architecture("invariant_gvp")
+        alphabet = esm.data.Alphabet.from_architecture("invariant_gvp")
         _alphabet = list("ACDEFGHIKLMNPQRSTVWYX")
 
         df_probs = pd.DataFrame(
@@ -306,26 +303,28 @@ def predictions_list_to_df_probs_list(all_seqprobs_list, dataset, dataloader):
     return all_df_probs_list
 
 
-def df_probs_list_to_csvs(df_probs_list, outdir):
+def df_probs_list_to_csvs(df_probs_list, out_dir):
     """Save df_probs_list to CSVs"""
-    os.makedirs(outdir, exist_ok=True)
-    print(f"Saving {len(df_probs_list)} CSVs to {outdir}")
+    os.makedirs(out_dir, exist_ok=True)
+    print(f"Saving {len(df_probs_list)} CSVs to {out_dir}")
 
     for df in df_probs_list:
-        outpath = f"{outdir}/{df.name}.csv"
+        outpath = f"{out_dir}/{df.name}.csv"
         df.to_csv(outpath)
 
 
-def predict_and_save(model, csv_pdbs, outdir, batch_size=1, save_flag=True):
+def predict_and_save(model, csv_pdbs, pdb_dir, out_dir, batch_size=1, save_flag=True):
     """Predict PDBs from a CSV file"""
 
     print(f"\nPredicting PDBs from CSV file: {csv_pdbs}")
 
     if save_flag:
-        print(f"Saving prediction CSVs to {outdir}")
+        print(f"Saving prediction CSVs to {out_dir}")
 
     # Load PDBs
-    dataset, dataloader = get_dataset_dataloader(csv_pdbs, batch_size=batch_size)
+    dataset, dataloader = get_dataset_dataloader(
+        csv_pdbs, pdb_dir, batch_size=batch_size
+    )
 
     # Predict PDBs -> df_probs
     predictions_list = dataset_dataloader_to_predictions_list(
@@ -337,7 +336,7 @@ def predict_and_save(model, csv_pdbs, outdir, batch_size=1, save_flag=True):
 
     # Save df_probs to CSVs
     if save_flag:
-        df_probs_list_to_csvs(df_probs_list, outdir)
+        df_probs_list_to_csvs(df_probs_list, out_dir)
 
     return df_probs_list
 
@@ -350,7 +349,7 @@ def main(args):
 
     # Antifold + SAB
     csv_pdbs = "/home/maghoi/repos/novo_new/data/single_pdb.csv"
-    outdir = "/home/maghoi/repos/novo_new/data/antifold"
+    out_dir = "/home/maghoi/repos/novo_new/data/antifold"
     _ = predict_and_save(model, args.pdb_csv, args.out_dir, args.batch_size)
 
 
