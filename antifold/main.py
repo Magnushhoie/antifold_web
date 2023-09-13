@@ -22,7 +22,7 @@ def cmdline_args():
     # Make parser object
     usage = f"""
     # Predict on example PDBs in folder
-    python antifold/antifold.py \
+    python antifold/main.py \
     --pdb_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
     --out_dir output/

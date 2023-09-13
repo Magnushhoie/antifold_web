@@ -11,10 +11,10 @@ conda install pip -y
 pip install biotite pandas numpy
 
 # Unzip model
-unzip model.zip
+unzip models.zip
 
 # Run on example pdbs
-python src/antifold.py \
+python antifold/main.py \
     --pdb_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
     --out_dir output/
