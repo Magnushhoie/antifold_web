@@ -3,7 +3,8 @@ import sys
 import warnings
 from pathlib import Path
 
-ROOT_PATH = str(Path(os.getcwd()))
+ROOT_PATH = Path(os.path.dirname(__file__)).parent
+# ROOT_PATH = str(Path(os.getcwd()))
 sys.path.insert(0, ROOT_PATH)
 sys.path.insert(0, "src/")
 
@@ -351,7 +352,7 @@ def main(args):
 
     # Antifold + SAB
     csv_pdbs = "/home/maghoi/repos/novo_new/data/single_pdb.csv"
-    out_dir = "/home/maghoi/repos/novo_new/data/antifold"
+    out_dir = "/home/maghoi/repos/novo_new/data/antifold2"
     _ = predict_and_save(model, args.pdb_csv, args.pdb_dir, args.out_dir, args.batch_size)
 
 
