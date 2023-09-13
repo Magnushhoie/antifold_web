@@ -4,9 +4,6 @@ import re
 import numpy as np
 import torch
 
-import esm
-
-
 def load_IF1_checkpoint(model, checkpoint_path: str = ""):
     # Load
     print(f"Loading checkpoint from {checkpoint_path}...")
