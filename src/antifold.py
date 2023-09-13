@@ -61,7 +61,7 @@ def cmdline_args():
 
     p.add_argument(
         "--model_path",
-        default="models/model_aug23.pt",
+        default="model/model_aug23.pt",
         help="Output directory",
         type=lambda x: is_valid_path(p, x),
     )
