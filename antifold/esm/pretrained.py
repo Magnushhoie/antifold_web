@@ -9,9 +9,8 @@ import warnings
 from argparse import Namespace
 from pathlib import Path
 
-import torch
-
 import esm
+import torch
 
 
 def _has_regression_weights(model_name):

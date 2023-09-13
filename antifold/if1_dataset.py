@@ -15,11 +15,10 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-import esm
-import esm.inverse_folding
-from esm_multichain_util_custom import (concatenate_coords_HL,
-                                        load_complex_coords)
-from esm_util_custom import CoordBatchConverter_mask
+import antifold.esm
+from antifold.esm_multichain_util_custom import (concatenate_coords_HL,
+                                                 load_complex_coords)
+from antifold.esm_util_custom import CoordBatchConverter_mask
 
 
 class InverseData(torch.utils.data.Dataset):
@@ -216,7 +215,7 @@ if __name__ == "__main__":
         f"Masked positions {loss_mask.sum()}/{len(loss_mask)}: {np.array(res_pos)[loss_mask]}"
     )
 
-    alphabet = esm.data.Alphabet.from_architecture("invariant_gvp")
+    alphabet = antifold.esm.data.Alphabet.from_architecture("invariant_gvp")
     dataloader = DataLoader(
         dataset,
         batch_size=batch_size,

@@ -14,8 +14,9 @@ from biotite.sequence import ProteinSequence
 # from biotite.structure.residues import get_residues
 from biotite.structure.residues import get_residue_starts
 
-from esm.inverse_folding.util import (get_encoder_output, get_sequence_loss,
-                                      load_structure)
+from antifold.esm.inverse_folding.util import (get_encoder_output,
+                                               get_sequence_loss,
+                                               load_structure)
 
 
 def get_atom_coords_residuewise(atoms: List[str], struct: biotite.structure.AtomArray):

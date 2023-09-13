@@ -3,6 +3,8 @@ import re
 
 import numpy as np
 import torch
+import antifold.esm
+
 
 def load_IF1_checkpoint(model, checkpoint_path: str = ""):
     # Load
@@ -39,7 +41,7 @@ def load_IF1_checkpoint(model, checkpoint_path: str = ""):
 def load_IF1_model(checkpoint_path: str = ""):
     """Load raw/FT IF1 model"""
 
-    model, _ = esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
+    model, _ = antifold.esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
 
     if checkpoint_path:
         model = load_IF1_checkpoint(model, checkpoint_path)
@@ -80,7 +82,7 @@ def get_dataset_pdb_name_res_posins_chains(dataset, idx):
 def logits_to_seqprobs_list(logits, tokens):
     """Convert logits (bs x 35 x L) ot list of L x 20 seqprobs"""
 
-    alphabet = esm.data.Alphabet.from_architecture("invariant_gvp")
+    alphabet = antifold.esm.data.Alphabet.from_architecture("invariant_gvp")
 
     mask_gap = tokens[:, 1:] != 30  # 30 is gap
     mask_pad = tokens[:, 1:] != alphabet.padding_idx  # 1 is padding

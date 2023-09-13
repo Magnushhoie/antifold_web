@@ -4,27 +4,25 @@ import warnings
 from pathlib import Path
 
 ROOT_PATH = Path(os.path.dirname(__file__)).parent
-# ROOT_PATH = str(Path(os.getcwd()))
 sys.path.insert(0, ROOT_PATH)
-sys.path.insert(0, "src/")
 
 import re
 from argparse import ArgumentParser, RawTextHelpFormatter
 
+import esm
 import numpy as np
 import pandas as pd
 import torch
 
-import esm
-from esm_util_custom import CoordBatchConverter_mask_gpu
-from if1_dataset import InverseData
+from antifold.esm_util_custom import CoordBatchConverter_mask_gpu
+from antifold.if1_dataset import InverseData
 
 
 def cmdline_args():
     # Make parser object
     usage = f"""
     # Predict on example PDBs in folder
-    python src/antifold.py \
+    python antifold/antifold.py \
     --pdb_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
     --out_dir output/
@@ -62,7 +60,7 @@ def cmdline_args():
 
     p.add_argument(
         "--model_path",
-        default="model/model_aug23.pt",
+        default="models/model_aug23.pt",
         help="Output directory",
         type=lambda x: is_valid_path(p, x),
     )
@@ -347,13 +345,13 @@ def predict_and_save(model, csv_pdbs, pdb_dir, out_dir, batch_size=1, save_flag=
 def main(args):
     """Predicts AbMPNN and IF1-raw models on Abmpnn test set (SAbDab and ImmuneBuilder versions)"""
 
-    # Try one PDB
+    # Load model
     model = load_IF1_model(args.model_path)
 
-    # Antifold + SAB
-    csv_pdbs = "/home/maghoi/repos/novo_new/data/single_pdb.csv"
-    out_dir = "/home/maghoi/repos/novo_new/data/antifold2"
-    _ = predict_and_save(model, args.pdb_csv, args.pdb_dir, args.out_dir, args.batch_size)
+    # Predict PDBs listed in CSV file
+    _ = predict_and_save(
+        model, args.pdb_csv, args.pdb_dir, args.out_dir, args.batch_size
+    )
 
 
 if __name__ == "__main__":

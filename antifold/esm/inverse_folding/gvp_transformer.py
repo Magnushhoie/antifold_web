@@ -8,10 +8,9 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
+from esm.data import Alphabet
 from scipy.spatial import transform
 from torch import Tensor, nn
-
-from esm.data import Alphabet
 
 from .features import DihedralFeatures
 from .gvp_encoder import GVPEncoder
