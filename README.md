@@ -1,16 +1,20 @@
 antifold_web
 ==============================
 
-### Setup and running
-```bash
-conda create -n inverse python=3.9
-conda activate inverse
-conda install pytorch=1.11 cudatoolkit=11.3 -c pytorch -y  ## very important to specify pytorch package!
-conda install pyg -c pyg -c conda-forge -y ## very important to make sure pytorch and cuda versions not being changed
-conda install pip -y
-pip install biotite pandas numpy
+# Quickstart guide
 
-# Unzip model
+```bash
+# Setup environment and install
+conda create --name inverse python=3.9 -y
+conda activate inverse
+conda install -c pyg pyg -y
+conda install -c conda-forge pip -y
+
+git clone https://github.com/Magnushhoie/discotope3_web/
+cd discotope3_web/
+pip install .
+
+# Unzip models to use (TODO)
 unzip models.zip
 
 # Run on example pdbs
