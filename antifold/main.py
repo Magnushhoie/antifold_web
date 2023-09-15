@@ -9,11 +9,11 @@ sys.path.insert(0, ROOT_PATH)
 import re
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-import esm
 import numpy as np
 import pandas as pd
 import torch
 
+import antifold.esm
 from antifold.esm_util_custom import CoordBatchConverter_mask_gpu
 from antifold.if1_dataset import InverseData
 
@@ -112,7 +112,7 @@ def load_IF1_model(checkpoint_path: str = ""):
     # Suppress regression weights warning - not needed
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        model, _ = esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
+        model, _ = antifold.esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
 
     if checkpoint_path:
         model = load_IF1_checkpoint(model, checkpoint_path)
@@ -157,7 +157,7 @@ def get_dataset_pdb_name_res_posins_chains(dataset, idx):
 def logits_to_seqprobs_list(logits, tokens):
     """Convert logits (bs x 35 x L) ot list of L x 20 seqprobs"""
 
-    alphabet = esm.data.Alphabet.from_architecture("invariant_gvp")
+    alphabet = antifold.esm.data.Alphabet.from_architecture("invariant_gvp")
 
     mask_gap = tokens[:, 1:] != 30  # 30 is gap
     mask_pad = tokens[:, 1:] != alphabet.padding_idx  # 1 is padding
@@ -183,7 +183,7 @@ def get_dataset_dataloader(csv_pdbs, pdb_dir, batch_size):
     dataset.populate(csv_pdbs, pdb_dir)
 
     # Prepare torch dataloader at specified batch size
-    alphabet = esm.data.Alphabet.from_architecture("invariant_gvp")
+    alphabet = antifold.esm.data.Alphabet.from_architecture("invariant_gvp")
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,
@@ -276,7 +276,7 @@ def predictions_list_to_df_probs_list(all_seqprobs_list, dataset, dataloader):
         assert len(seq_probs) == len(pdb_posins)
 
         # DataFrame
-        alphabet = esm.data.Alphabet.from_architecture("invariant_gvp")
+        alphabet = antifold.esm.data.Alphabet.from_architecture("invariant_gvp")
         _alphabet = list("ACDEFGHIKLMNPQRSTVWYX")
 
         df_probs = pd.DataFrame(
@@ -311,6 +311,7 @@ def df_probs_list_to_csvs(df_probs_list, out_dir):
 
     for df in df_probs_list:
         outpath = f"{out_dir}/{df.name}.csv"
+        print(f"Writing predictions for {df.name} to {outpath}")
         df.to_csv(outpath)
 
 

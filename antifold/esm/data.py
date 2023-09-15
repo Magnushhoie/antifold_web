@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import List, Sequence, Tuple, Union
 
 import torch
-from esm.constants import proteinseq_toks
+from antifold.esm.constants import proteinseq_toks
 
 RawMSA = Sequence[Tuple[str, str]]
 

@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+REQUIREMENTS = [i.strip() for i in open("requirements.txt").readlines()]
+
 setup(
     name='antifold',
     version='0.1.0',    
@@ -8,11 +10,8 @@ setup(
     url='https://github.com/Magnushhoie/antifold_web/',
     author='Magnus Haraldson Høie & Alissa Hummer',
     author_email='maghoi@dtu.dk & alissa.hummer@stcatz.ox.ac.uk',
-    license='N/A',
-    install_requires=['pandas',
-                      'numpy',                     
-                      ],
-
+    license="CC BY-NC 4.0",
+    install_requires=REQUIREMENTS,
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Science/Research',

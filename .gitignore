@@ -4,6 +4,8 @@ config*
 bak/
 old/
 tmp/
+models/
+output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
