@@ -7,11 +7,13 @@ antifold_web
 # Setup environment and install
 conda create --name inverse python=3.9 -y
 conda activate inverse
+conda install pytorch cudatoolkit=11.3 -c pytorch -y
 conda install -c pyg pyg -y
 conda install -c conda-forge pip -y
 
-git clone https://github.com/Magnushhoie/discotope3_web/
-cd discotope3_web/
+# Download and install
+git clone https://github.com/Magnushhoie/antifold_web/
+cd antifold_web/
 pip install .
 
 # Unzip models to use (TODO)
