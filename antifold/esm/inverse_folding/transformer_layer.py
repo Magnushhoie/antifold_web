@@ -10,8 +10,9 @@ from typing import Dict, List, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from antifold.esm.multihead_attention import MultiheadAttention
 from torch import Tensor
+
+from antifold.esm.multihead_attention import MultiheadAttention
 
 
 class TransformerEncoderLayer(nn.Module):

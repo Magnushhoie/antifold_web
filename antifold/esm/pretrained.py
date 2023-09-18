@@ -9,8 +9,9 @@ import warnings
 from argparse import Namespace
 from pathlib import Path
 
-import antifold.esm
 import torch
+
+import antifold.esm
 
 
 def _has_regression_weights(model_name):

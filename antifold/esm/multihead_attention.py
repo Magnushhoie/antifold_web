@@ -9,9 +9,10 @@ from typing import Dict, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
-from antifold.esm.rotary_embedding import RotaryEmbedding
 from torch import Tensor, nn
 from torch.nn import Parameter
+
+from antifold.esm.rotary_embedding import RotaryEmbedding
 
 
 def utils_softmax(x, dim: int, onnx_trace: bool = False):

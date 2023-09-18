@@ -6,6 +6,7 @@ old/
 tmp/
 models/
 output/
+antifold/esm
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

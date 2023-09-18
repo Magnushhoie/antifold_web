@@ -121,8 +121,7 @@ class InverseData(torch.utils.data.Dataset):
             pdb_path_list.append(pdb_path)
 
             if not os.path.exists(pdb_path):
-                log.error(f"Unable to find PDB file: {pdb_path}")
-                raise Exception
+                raise Exception(f"Unable to find PDB file: {pdb_path}")
 
         # PDB paths
         self.pdb_paths = pdb_path_list

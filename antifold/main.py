@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import warnings
@@ -71,12 +72,18 @@ def cmdline_args():
         help="Batch-size to use",
     )
 
+    p.add_argument(
+        "--verbose",
+        default=1,
+        help="Verbose printing",
+    )
+
     return p.parse_args()
 
 
 def load_IF1_checkpoint(model, checkpoint_path: str = ""):
     # Load
-    print(f"Loading checkpoint from {checkpoint_path}...")
+    log.info(f"Loading checkpoint from {checkpoint_path}...")
 
     # Check for CPU/GPU load
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -117,7 +124,7 @@ def load_IF1_model(checkpoint_path: str = ""):
     if checkpoint_path:
         model = load_IF1_checkpoint(model, checkpoint_path)
     else:
-        print(f"Loaded raw IF1 model (no checkpoint provided)")
+        log.info(f"Loaded raw IF1 model (no checkpoint provided)")
 
     # Evaluation mode when predicting
     model = model.eval()
@@ -125,7 +132,7 @@ def load_IF1_model(checkpoint_path: str = ""):
     # Send to CPU/GPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     _ = model.to(device)
-    print(f"Loaded model to {device}.")
+    log.info(f"Loaded model to {device}.")
 
     return model
 
@@ -212,7 +219,7 @@ def dataset_dataloader_to_predictions_list(model, dataset, dataloader, batch_siz
         end_index = min(
             start_index + batch_size, len(dataset)
         )  # Adjust for the last batch
-        print(
+        log.info(
             f"Predicting batch {bi+1}/{len(dataloader)}: PDBs {start_index+1}-{end_index} out of {len(dataset)} total"
         )  # -1 because the end_index is exclusive
 
@@ -307,21 +314,21 @@ def predictions_list_to_df_probs_list(all_seqprobs_list, dataset, dataloader):
 def df_probs_list_to_csvs(df_probs_list, out_dir):
     """Save df_probs_list to CSVs"""
     os.makedirs(out_dir, exist_ok=True)
-    print(f"Saving {len(df_probs_list)} CSVs to {out_dir}")
+    log.info(f"Saving {len(df_probs_list)} CSVs to {out_dir}")
 
     for df in df_probs_list:
         outpath = f"{out_dir}/{df.name}.csv"
-        print(f"Writing predictions for {df.name} to {outpath}")
+        log.info(f"Writing predictions for {df.name} to {outpath}")
         df.to_csv(outpath)
 
 
 def predict_and_save(model, csv_pdbs, pdb_dir, out_dir, batch_size=1, save_flag=True):
     """Predict PDBs from a CSV file"""
 
-    print(f"\nPredicting PDBs from CSV file: {csv_pdbs}")
+    log.info(f"\nPredicting PDBs from CSV file: {csv_pdbs}")
 
     if save_flag:
-        print(f"Saving prediction CSVs to {out_dir}")
+        log.info(f"Saving prediction CSVs to {out_dir}")
 
     # Load PDBs
     dataset, dataloader = get_dataset_dataloader(
@@ -346,6 +353,9 @@ def predict_and_save(model, csv_pdbs, pdb_dir, out_dir, batch_size=1, save_flag=
 def main(args):
     """Predicts AbMPNN and IF1-raw models on Abmpnn test set (SAbDab and ImmuneBuilder versions)"""
 
+    # Create output directory
+    os.makedirs(args.out_dir, exist_ok=True)
+
     # Load model
     model = load_IF1_model(args.model_path)
 
@@ -356,7 +366,31 @@ def main(args):
 
 
 if __name__ == "__main__":
-    print(f"Predicting PDBs with Antifold ...")
-
     args = cmdline_args()
+
+    # Log to file and stdout
+    # If verbose == 0, only errors are printed (default 1)
+    os.makedirs(args.out_dir, exist_ok=True)
+    log_path = os.path.abspath(f"{args.out_dir}/log.txt")
+
+    logging.basicConfig(
+        level=logging.ERROR,
+        format="[{asctime}] {message}",
+        style="{",
+        handlers=[
+            logging.FileHandler(filename=log_path, mode="w"),
+            logging.StreamHandler(stream=sys.stdout),
+        ],
+    )
+    log = logging.getLogger(__name__)
+
+    # INFO prints total summary and errors (default)
+    if args.verbose == 1:
+        logging.getLogger().setLevel(logging.INFO)
+
+    # DEBUG prints every major step
+    elif args.verbose >= 2:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    log.info(f"Predicting PDBs with Antifold ...")
     main(args)
