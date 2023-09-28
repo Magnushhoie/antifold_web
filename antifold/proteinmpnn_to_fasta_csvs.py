@@ -1,10 +1,13 @@
 import glob
 import os
+import re
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import numpy as np
 import pandas as pd
 import torch
+from Bio import SeqIO
+from Bio.Seq import Seq
 from biotite.sequence.seqtypes import ProteinSequence
 from biotite.structure.io import pdb
 from biotite.structure.residues import get_residue_starts
@@ -14,9 +17,9 @@ def cmdline_args():
     # Make parser object
     usage = f"""
     # Convert ProteinMPNN npz files to csv files
-    python mpnn_npzs_to_csvs.py \
+    python proteinmpnn_to_fasta_csvs.py \
     --pdb_dir pdbs/ \
-    --npz_dir npzs/
+    --mpnn_dir proteinmpnn/SAB/
     """
     p = ArgumentParser(
         description="",
@@ -31,7 +34,7 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--npz_dir",
+        "--mpnn_dir",
         required=True,
         help="NPZ file directory (output ProteinMPNN)",
     )
@@ -198,12 +201,12 @@ def mpnn_npz_pdb_to_df(npz_file, pdb_file):
     return df_probs
 
 
-def mpnn_npzdir_to_csv(npz_dir, pdb_dir):
+def proteinmpnn_npz_to_csvs(mpnn_dir, pdb_dir):
     """Recursively finds MPNN npz files, matches w/ PDB and saves probs CSV"""
 
-    npz_files = glob.glob(f"{npz_dir}/**/*.npz", recursive=True)
+    npz_files = glob.glob(f"{mpnn_dir}/**/*.npz", recursive=True)
 
-    print(f"Found {len(npz_files)} npz files in {npz_dir} ...")
+    print(f"Found {len(npz_files)} npz files in {mpnn_dir} ...")
     print(f"Converting to CSV using PDB files from {pdb_dir} ...")
 
     for i, npz_file in enumerate(npz_files):
@@ -228,28 +231,72 @@ def mpnn_npzdir_to_csv(npz_dir, pdb_dir):
         df_probs.to_csv(csv_file)
 
 
+def extract_mpnn_fasta_sample_num(record):
+    """Extract sample number from ProteinMPNN output.fa file, e.g. sample=7 -> 7"""
+
+    if (
+        not str(type(record))
+        == str(type(record))
+        == "<class 'Bio.SeqRecord.SeqRecord'>"
+    ):
+        print(f"ERROR: record type is {str(type(record))}")
+        raise TypeError(f"record must be a Bio.SeqRecord.SeqRecord")
+
+    m = re.search(r"sample=(\d+)", record.description)
+
+    if not m:
+        raise ValueError(f"No sample number found in fasta header: {record}")
+
+    sample_num = m.group(1)
+
+    return sample_num
+
+
+def proteinmpnn_split_fastas(mpnn_dir, pdb_dir):
+    """Recursively finds MPNN npz files, matches w/ PDB and saves probs CSV"""
+
+    fa_files = glob.glob(f"{mpnn_dir}/**/*.fa", recursive=True)
+    print(f"Found {len(fa_files)} .fa files in {mpnn_dir} ...")
+
+    for i, fasta_path in enumerate(fa_files):
+
+        outdir = os.path.dirname(fasta_path)
+        basename = os.path.splitext(os.path.basename(fasta_path))[0]
+        num = extract_mpnn_fasta_sample_num(record)
+
+        # Split out all the sampled sequences (starts with "T=")
+        for record in SeqIO.parse(fasta_path, "fasta"):
+
+            # Extract H/L chain
+            seq = str(record.seq)
+            seqs = seq.split("/")
+
+            if not len(seqs) == 2:
+                raise ValueError(
+                    f"record.seq must be 2 sequences separated by a single '/' character:\n{record.description}from\n{seq}"
+                )
+
+            H, L = seqs
+            seq_dict = {
+                "H": SeqIO.SeqRecord(Seq(H), id="H", name="H", description="H"),
+                "L": SeqIO.SeqRecord(Seq(L), id="L", name="L", description="L"),
+            }
+
+            
+            outfile = f"{outdir}/{basename}__{num}.fasta"
+            print(f"Writing to {outfile}")
+
+            #with open(outfile, "w") as out_handle:
+            #    SeqIO.write(seq_dict.values(), out_handle, "fasta")
+
+
 def main(args):
-    _ = mpnn_npzdir_to_csv(args.npz_dir, args.pdb_dir)
 
-    """
-    # ImmuneBuilder structures
-    pdb_dir = "/home/maghoi/repos/__personal/antifold/data/abmpnn/IB"
-    # ProteinMPNN
-    npz_dir = "/home/maghoi/repos/__personal/antifold/output/proteinmpnn/IB/"
-    _ = mpnn_npzdir_to_csv(npz_dir, pdb_dir)
-    # AbMPNN
-    npz_dir = "/home/maghoi/repos/__personal/antifold/output/abmpnn/IB/"
-    _ = mpnn_npzdir_to_csv(npz_dir, pdb_dir)
+    # Output residue probs .npz files to CSVs aligned on PDBs
+    #_ = proteinmpnn_npz_to_csvs(args.mpnn_dir, args.pdb_dir)
 
-    # Solved structures
-    # pdb_dir = "/home/maghoi/repos/__personal/antifold/data/abmpnn/SAB"
-    # ProteinMPNN
-    # npz_dir = "/home/maghoi/repos/__personal/antifold/output/proteinmpnn/SAB/"
-    # _ = mpnn_npzdir_to_csv(npz_dir, pdb_dir)
-    # AbMPNN
-    # npz_dir = "/home/maghoi/repos/__personal/antifold/output/abmpnn/SAB/"
-    # _ = mpnn_npzdir_to_csv(npz_dir, pdb_dir)
-    """
+    # Output sampled sequence .fa files to individual FASTAs
+    _ = proteinmpnn_split_fastas(args.mpnn_dir, args.pdb_dir)
 
 
 if __name__ == "__main__":

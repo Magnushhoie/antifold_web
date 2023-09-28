@@ -13,12 +13,12 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import torch
+from esm_multichain_util_custom import (concatenate_coords_HL,
+                                        load_complex_coords)
+from esm_util_custom import CoordBatchConverter_mask
 from torch.utils.data import DataLoader
 
 import esm
-from esm_multichain_util_custom import (concatenate_coords_HL,
-                                                 load_complex_coords)
-from esm_util_custom import CoordBatchConverter_mask
 
 
 class InverseData(torch.utils.data.Dataset):

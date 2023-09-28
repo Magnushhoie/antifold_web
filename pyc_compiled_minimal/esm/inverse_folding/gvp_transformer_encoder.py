@@ -11,9 +11,8 @@ from typing import Dict, List, Optional
 
 import torch
 import torch.nn as nn
-from torch import Tensor
-
 from esm.modules import SinusoidalPositionalEmbedding
+from torch import Tensor
 
 from .features import DihedralFeatures, GVPInputFeaturizer
 from .gvp_encoder import GVPEncoder

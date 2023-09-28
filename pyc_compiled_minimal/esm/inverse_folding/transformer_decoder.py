@@ -10,9 +10,8 @@ from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
-from torch import Tensor
-
 from esm.modules import SinusoidalPositionalEmbedding
+from torch import Tensor
 
 from .transformer_layer import TransformerDecoderLayer
 

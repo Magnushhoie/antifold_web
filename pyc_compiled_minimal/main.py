@@ -13,10 +13,10 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 import numpy as np
 import pandas as pd
 import torch
-
-import esm
 from esm_util_custom import CoordBatchConverter_mask_gpu
 from if1_dataset import InverseData
+
+import esm
 
 
 def cmdline_args():
