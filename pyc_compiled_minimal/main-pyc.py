@@ -15,8 +15,8 @@ import pandas as pd
 import torch
 
 import esm
-from esm_util_custom import CoordBatchConverter_mask_gpu
-from if1_dataset import InverseData
+from pyc.esm_util_custom import CoordBatchConverter_mask_gpu
+from pyc.if1_dataset import InverseData
 
 
 def cmdline_args():

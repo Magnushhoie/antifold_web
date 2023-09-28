@@ -141,3 +141,5 @@ dmypy.json
 .DS_Store
 .idea
 
+
+pyc_compiled_minimal/20230926-mlsb_3_3-layer_decay-shotgun_span_masking-imgt_weighted-abmpnn_oas_gaussian_noise-then_sabdab-model-epoch_6.pt
