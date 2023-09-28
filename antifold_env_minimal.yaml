@@ -1,4 +1,4 @@
-name: antifold
+name: antifold_minimal
 channels:
   - pytorch
   - pyg
@@ -14,4 +14,4 @@ dependencies:
   - pip:
       - biopython==1.80
       - biotite==0.35.0
-      - fair-esm==2.0.1
+      - fair-esm==2.0.0
