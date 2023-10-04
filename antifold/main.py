@@ -367,7 +367,7 @@ def seed_everything(seed: int):
 
 
 def predict_and_save(
-    model, csv_pdbs, pdb_dir, out_dir, batch_size=1, save_flag=True, seed=42
+    model, csv_pdbs, pdb_dir, out_dir=False, batch_size=1, save_flag=True, seed=42
 ):
     """Predict PDBs from a CSV file"""
 

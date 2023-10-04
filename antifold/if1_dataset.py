@@ -96,13 +96,13 @@ class InverseData(torch.utils.data.Dataset):
 
         # Accept DataFrame or CSV path
         if type(pdb_csv) == pd.DataFrame:
-            log.info("Reading in DataFrame")
+            log.info(f"Reading in DataFrame")
             df = pdb_csv
         else:
             if not os.path.exists(pdb_csv):
                 log.error(f"Unable to find pdb_csv {pdb_csv}")
                 sys.exit(1)
-            log.info("Reading in CSV: {pdb_csv}")
+            log.info(f"Reading in CSV: {pdb_csv}")
             df = pd.read_csv(pdb_csv)
 
         if not len(df) >= 1:
