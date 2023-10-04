@@ -85,7 +85,7 @@ class InverseData(torch.utils.data.Dataset):
         """
         return coords + np.random.normal(scale=scale, size=coords.shape)
 
-    def populate(self, pdb_csv: str, pdb_dir: str, verbose: int = 1):
+    def populate(self, pdb_csv: "path or pd.DataFrame", pdb_dir: str, verbose: int = 1):
         """
         Gets the actual PDB paths to be used for training and testing,
         will filter on the PDBs present in the paragraph CSV dict if set.
@@ -94,14 +94,18 @@ class InverseData(torch.utils.data.Dataset):
             pdb_csv: path to csv file containing pdb, Hchain and Lchain
         """
 
-        if not os.path.exists(pdb_csv):
-            log.error(f"Unable to find pdb_csv {pdb_csv}")
-            sys.exit(1)
+        # Accept DataFrame or CSV path
+        if type(pdb_csv) == pd.DataFrame:
+            log.info("Reading in DataFrame")
+            df = pdb_csv
+        else:
+            if not os.path.exists(pdb_csv):
+                log.error(f"Unable to find pdb_csv {pdb_csv}")
+                sys.exit(1)
+            log.info("Reading in CSV: {pdb_csv}")
+            df = pd.read_csv(pdb_csv)
 
-        # Load CSV and check it
-        df = pd.read_csv(pdb_csv)
-
-        if not len(df) >= 2:
+        if not len(df) >= 1:
             log.error(f"CSV file {pdb_csv} must contain at least 1 PDB")
             sys.exit(1)
 

@@ -13,10 +13,28 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn.functional as F
+from Bio import SeqIO
+from Bio.Seq import Seq
 
 import antifold.esm
 from antifold.esm_util_custom import CoordBatchConverter_mask_gpu
 from antifold.if1_dataset import InverseData
+
+log = logging.getLogger(__name__)
+
+amino_list = list("ACDEFGHIKLMNPQRSTVWY")
+
+IMGT_dict = {
+    "all": range(1, 128 + 1),
+    "FW1": range(1, 26 + 1),
+    "CDR1": range(27, 39),
+    "FW2": range(40, 55 + 1),
+    "CDR2": range(56, 65 + 1),
+    "FW3": range(66, 104 + 1),
+    "CDR3": range(105, 117 + 1),
+    "FW4": range(118, 128 + 1),
+}
 
 
 def cmdline_args():
@@ -69,12 +87,21 @@ def cmdline_args():
     p.add_argument(
         "--batch_size",
         default=1,
+        type=int,
+        help="Batch-size to use",
+    )
+
+    p.add_argument(
+        "--seed",
+        default=42,
+        type=int,
         help="Batch-size to use",
     )
 
     p.add_argument(
         "--verbose",
         default=1,
+        type=int,
         help="Verbose printing",
     )
 
@@ -322,13 +349,34 @@ def df_probs_list_to_csvs(df_probs_list, out_dir):
         df.to_csv(outpath)
 
 
-def predict_and_save(model, csv_pdbs, pdb_dir, out_dir, batch_size=1, save_flag=True):
+def seed_everything(seed: int):
+    # https://gist.github.com/ihoromi4/b681a9088f348942b01711f251e5f964
+    import os
+    import random
+
+    import numpy as np
+    import torch
+
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
+
+
+def predict_and_save(
+    model, csv_pdbs, pdb_dir, out_dir, batch_size=1, save_flag=True, seed=42
+):
     """Predict PDBs from a CSV file"""
 
     log.info(f"\nPredicting PDBs from CSV file: {csv_pdbs}")
 
     if save_flag:
         log.info(f"Saving prediction CSVs to {out_dir}")
+
+    seed_everything(seed)
 
     # Load PDBs
     dataset, dataloader = get_dataset_dataloader(
@@ -350,6 +398,205 @@ def predict_and_save(model, csv_pdbs, pdb_dir, out_dir, batch_size=1, save_flag=
     return df_probs_list
 
 
+def sample_new_sequences_CDR_HL(
+    df,
+    t=0.20,
+    imgt_regions=["CDR1", "CDR2", "CDR3"],
+    return_mutation_df=False,
+    limit_expected_variation=True,
+    verbose=False,
+):
+    """Samples new sequences only varying at H/L CDRs"""
+
+    def _sample_cdr_seq(df, t=0.20):
+        """DF to sampled seq"""
+
+        # CDR1+2+3 mask
+        cdr_mask = get_imgt_mask(df, imgt_regions)
+
+        # Probabilities after scaling with temp
+        probs = get_temp_probs(df, t=t)
+        probs_cdr = probs[cdr_mask]
+
+        # Sampled tokens and sequence
+        sampled_tokens = torch.multinomial(probs_cdr, 1).squeeze(-1)
+        sampled_seq = np.array([amino_list[i] for i in sampled_tokens])
+
+        return sampled_seq
+
+    # Prepare to sample new H + L sequences (CDR only)
+    df_H, df_L = get_dfs_HL(df)
+
+    # Get H, sampling only for CDRs
+    cdr_mask = get_imgt_mask(df_H, imgt_regions)
+    h_sampled = get_df_seq(df_H)
+    h_sampled[cdr_mask] = _sample_cdr_seq(df_H, t=t)
+
+    # Get L, sampling only for CDRs
+    cdr_mask = get_imgt_mask(df_L, imgt_regions)
+    l_sampled = get_df_seq(df_L)
+    l_sampled[cdr_mask] = _sample_cdr_seq(df_L, t=t)
+
+    # Use for later
+    sampled_seq = np.concatenate([h_sampled, l_sampled])
+    cdr_mask = get_imgt_mask(df, imgt_regions)
+
+    #  Mismatches vs predicted (CDR only)
+    pred_seq = get_df_seq_pred(df)
+    mismatch_idxs_pred_cdr = np.where((sampled_seq[cdr_mask] != pred_seq[cdr_mask]))[0]
+
+    # Mismatches vs original (all)
+    orig_seq = get_df_seq(df)
+    mismatch_idxs_orig = np.where((sampled_seq != orig_seq))[0]
+
+    if limit_expected_variation:
+        # Limit mutations (backmutate) to as many expected from temperature sampling
+        # Needed as at t=0, no variation is expected, but over 50% of the CDR
+        # top predicted residues may be different
+        backmutate = len(mismatch_idxs_orig) - len(mismatch_idxs_pred_cdr)
+        if backmutate >= 1:
+            backmutate_idxs = np.random.choice(
+                mismatch_idxs_orig, size=backmutate, replace=False
+            )
+            sampled_seq[backmutate_idxs] = orig_seq[backmutate_idxs]
+            h_sampled = sampled_seq[: len(df_H)]
+            l_sampled = sampled_seq[-len(df_L) :]
+
+    # Variables for calculating mismatches
+    sampled_seq = np.concatenate([h_sampled, l_sampled])
+    orig_seq = get_df_seq(df)
+
+    # Mismatches vs predicted (CDR only) and original (all)
+    if verbose:
+        pred_seq = get_df_seq_pred(df)
+        cdr_mask = get_imgt_mask(df, imgt_regions)
+        mismatch_idxs_pred = np.where((sampled_seq[cdr_mask] != pred_seq[cdr_mask]))[0]
+        mismatch_idxs_orig = np.where((sampled_seq[cdr_mask] != orig_seq[cdr_mask]))[0]
+
+        print(
+            f"Sampled {len(mismatch_idxs_pred)} / {cdr_mask.sum()} new CDR residues vs top predicted"
+        )
+        print(
+            f"Sampled {len(mismatch_idxs_orig)} / {cdr_mask.sum()} new CDR residues vs original"
+        )
+
+    # DataFrame with sampled mutations
+    if return_mutation_df:
+        mut_list = np.where(sampled_seq != orig_seq)[0]
+        df_mut = df.loc[
+            mut_list, ["aa_orig", "aa_pred", "pdb_posins", "pdb_chain"]
+        ].copy()
+        df_mut.insert(1, "aa_sampled", sampled_seq[mut_list])
+
+        return h_sampled, l_sampled, df_mut
+
+    return h_sampled, l_sampled
+
+
+def pdb_posins_to_pos(pdb_posins):
+    # Convert pos+insertion code to numerical only
+    return pdb_posins.astype(str).str.extract(r"(\d+)")[0].astype(int).values
+
+
+def get_imgt_mask(df, imgt_regions=["CDR1", "CDR2", "CDR3"]):
+    """Returns e.g. CDR1+2+3 mask"""
+
+    positions = pdb_posins_to_pos(df["pdb_posins"])
+    region_pos_list = list()
+
+    for region in imgt_regions:
+        if str(region) not in IMGT_dict.keys():
+            region_pos_list.extend(region)
+        else:
+            region_pos_list.extend(list(IMGT_dict[region]))
+
+    region_mask = pd.Series(positions).isin(region_pos_list).values
+
+    return region_mask
+
+
+def get_cdr_mask(df):
+    """Returns CDR1+2+3 mask"""
+    positions = pdb_posins_to_pos(df["pdb_posins"])
+    cdr_pos = (
+        list(IMGT_dict["CDR1"]) + list(IMGT_dict["CDR2"]) + list(IMGT_dict["CDR3"])
+    )
+    cdr_mask = pd.Series(positions).isin(cdr_pos).values
+    return cdr_mask
+
+
+def get_df_logits(df):
+    cols = list("ACDEFGHIKLMNPQRSTVWY")
+    logits = torch.tensor(df[cols].values)
+
+    return logits
+
+
+def get_temp_probs(df, t=0.20):
+    """Gets temperature scaled probabilities for sampling"""
+
+    logits = get_df_logits(df)
+    temp_logits = logits / t
+    temp_probs = F.softmax(temp_logits, dim=1)
+
+    return temp_probs
+
+
+def get_dfs_HL(df):
+    """Split df into heavy and light chains"""
+    Hchain, Lchain = df["pdb_chain"].unique()
+    return df[df["pdb_chain"] == Hchain], df[df["pdb_chain"] == Lchain]
+
+
+def get_df_seq(df):
+    """Get PDB sequence"""
+    return df["pdb_res"].values
+
+
+def get_df_seq_pred(df):
+    """Get PDB sequence"""
+    return df["aa_pred"].values
+
+
+def get_df_seqs_HL(df):
+    """Get heavy and light chain sequences"""
+    df_H, df_L = get_dfs_HL(df)
+    return get_df_seq(df_H), get_df_seq(df_L)
+
+
+def write_HL_sequences(outfile, H, L, config=False, verbose=True):
+    """Writes H and L sequences to output FASTA file"""
+
+    fasta_dict = {}
+
+    desc = ""
+
+    if config:
+        # >1bj1_HL_fv, score=0.4628, global_score=0.4628, fixed_chains=[], designed_chains=['H', 'L'], model_name=abmpnn, git_hash=8907e6671bfbfc92303b5f79c4b5e6ce47cdef57, seed=37
+        desc = f"{config['name']} t={config['temperature']:.2f}, mutations={config['mutations']}"
+
+        # Limit variation flag
+        limit_variation = (
+            f"limit_variation={config['limit_variation']}"
+            if config["limit_variation"]
+            else ""
+        )
+        desc += limit_variation
+
+    seq = "".join(H)
+    fasta_dict["H"] = SeqIO.SeqRecord(Seq(seq), id="H", name="H", description=desc)
+
+    seq = "".join(L)
+    fasta_dict["L"] = SeqIO.SeqRecord(Seq(seq), id="L", name="L", description=desc)
+
+    # Write
+    if verbose:
+        print(f"Writing sequence H ({len(H)}) and L ({len(L)}) to {outfile}")
+
+    with open(outfile, "w") as out_handle:
+        SeqIO.write(fasta_dict.values(), out_handle, "fasta")
+
+
 def main(args):
     """Predicts AbMPNN and IF1-raw models on Abmpnn test set (SAbDab and ImmuneBuilder versions)"""
 
@@ -361,7 +608,7 @@ def main(args):
 
     # Predict PDBs listed in CSV file
     _ = predict_and_save(
-        model, args.pdb_csv, args.pdb_dir, args.out_dir, args.batch_size
+        model, args.pdb_csv, args.pdb_dir, args.out_dir, args.batch_size, args.seed
     )
 
 
