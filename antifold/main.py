@@ -473,11 +473,9 @@ def sample_new_sequences_CDR_HL(
         mismatch_idxs_pred = np.where((sampled_seq[cdr_mask] != pred_seq[cdr_mask]))[0]
         mismatch_idxs_orig = np.where((sampled_seq[cdr_mask] != orig_seq[cdr_mask]))[0]
 
+        _pdb = df.name
         print(
-            f"Sampled {len(mismatch_idxs_pred)} / {cdr_mask.sum()} new CDR residues vs top predicted"
-        )
-        print(
-            f"Sampled {len(mismatch_idxs_orig)} / {cdr_mask.sum()} new CDR residues vs original"
+            f"PDB {_pdb}: Sampled {len(mismatch_idxs_orig)} / {cdr_mask.sum()} new residues ({len(mismatch_idxs_pred)} vs top predicted)"
         )
 
     # DataFrame with sampled mutations
