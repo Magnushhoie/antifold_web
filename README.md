@@ -25,6 +25,8 @@ conda install -c conda-forge pip -y
 
 # Install AntiFold
 pip install .
+```
+
 ```bash
 # Run on single PDB, CDRH3 only
 python antifold/main.py \
