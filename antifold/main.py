@@ -337,7 +337,6 @@ if __name__ == "__main__":
 
     # Check valid input
     check_valid_input(args)
-    print(args)
 
     try:
         log.info(f"Sampling PDBs with Antifold ...")
