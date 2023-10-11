@@ -10,7 +10,6 @@ setup(
     url="https://github.com/Magnushhoie/antifold_web/",
     author="Magnus Haraldson Høie & Alissa Hummer",
     author_email="maghoi@dtu.dk & alissa.hummer@stcatz.ox.ac.uk",
-    license="CC BY-NC 4.0",
     install_requires=REQUIREMENTS,
     classifiers=[
         "Development Status :: 1 - Planning",

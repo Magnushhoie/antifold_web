@@ -396,9 +396,9 @@ class CoordBatchConverter_mask_gpu(BatchConverter):
         batch_size = len(val_list)
         max_len = max(len(v) for v in val_list)
         out = torch.full(
-            size=(batch_size, max_len + 2),  # bos, eos
+            size=(batch_size, max_len + 2),
             fill_value=np.nan,
-        )
+        )  # bos, eos
         for i, rp in enumerate(val_list):
             out[i, 1 : len(rp) + 1] = torch.tensor(np.array(rp))
 
@@ -553,9 +553,9 @@ class CoordBatchConverter_mask(BatchConverter):
         batch_size = len(val_list)
         max_len = max(len(v) for v in val_list)
         out = torch.full(
-            size=(batch_size, max_len + 2),  # bos, eos
+            size=(batch_size, max_len + 2),
             fill_value=np.nan,
-        )
+        )  # bos, eos
         for i, rp in enumerate(val_list):
             out[i, 1 : len(rp) + 1] = torch.tensor(np.array(rp))
 

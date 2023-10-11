@@ -79,8 +79,9 @@ def randn(n, dims, device="cpu"):
     :return: (s, V) with s.shape = (n, n_scalar) and
              V.shape = (n, n_vector, 3)
     """
-    return torch.randn(n, dims[0], device=device), torch.randn(
-        n, dims[1], 3, device=device
+    return (
+        torch.randn(n, dims[0], device=device),
+        torch.randn(n, dims[1], 3, device=device),
     )
 
 

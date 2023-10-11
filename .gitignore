@@ -4,6 +4,7 @@ config*
 bak/
 old/
 tmp/
+_temp/
 models/
 output/
 antifold/esm

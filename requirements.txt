@@ -3,5 +3,5 @@ biopython==1.80
 biotite==0.38
 xgboost==1.6.*
 pygam==0.9.*
-numpy==1.25.*
-pandas==2.1.*
+numpy
+pandas

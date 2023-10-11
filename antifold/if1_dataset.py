@@ -69,6 +69,8 @@ class InverseData(torch.utils.data.Dataset):
             coords_dict, seq_dict, pos_dict, posins_dict, heavy_chain_id=Hchain
         )
 
+        # Limit to IMGT VH/VL regions (pos 1-128)
+
         return (
             coords_concatenated,
             seq_concatenated,
@@ -85,28 +87,36 @@ class InverseData(torch.utils.data.Dataset):
         """
         return coords + np.random.normal(scale=scale, size=coords.shape)
 
-    def populate(self, pdb_csv: "path or pd.DataFrame", pdb_dir: str, verbose: int = 1):
+    def populate(
+        self,
+        pdbs_csv_or_dataframe: 'str, "path or pd.DataFrame"',
+        pdb_dir: str,
+        verbose: int = 1,
+    ):
         """
         Gets the actual PDB paths to be used for training and testing,
         will filter on the PDBs present in the paragraph CSV dict if set.
 
         Args:
-            pdb_csv: path to csv file containing pdb, Hchain and Lchain
+            pdbs_csv_or_dataframe: path to csv file containing pdb, Hchain and Lchain
         """
 
         # Accept DataFrame or CSV path
-        if type(pdb_csv) == pd.DataFrame:
-            log.info(f"Reading in DataFrame")
-            df = pdb_csv
+        if isinstance(pdbs_csv_or_dataframe, pd.DataFrame):
+            df = pdbs_csv_or_dataframe
+            log.info(f"Reading in ({len(df)}) PDBs from DataFrame")
         else:
-            if not os.path.exists(pdb_csv):
-                log.error(f"Unable to find pdb_csv {pdb_csv}")
+            if not os.path.exists(pdbs_csv_or_dataframe):
+                log.error(
+                    f"Unable to find pdbs_csv_or_dataframe {pdbs_csv_or_dataframe}"
+                )
                 sys.exit(1)
-            log.info(f"Reading in CSV: {pdb_csv}")
-            df = pd.read_csv(pdb_csv)
+
+            df = pd.read_csv(pdbs_csv_or_dataframe)
+            log.info(f"Populating {len(df)} PDBs from {pdbs_csv_or_dataframe}")
 
         if not len(df) >= 1:
-            log.error(f"CSV file {pdb_csv} must contain at least 1 PDB")
+            log.error(f"CSV file {pdbs_csv_or_dataframe} must contain at least 1 PDB")
             sys.exit(1)
 
         if not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() == 3:
@@ -114,9 +124,6 @@ class InverseData(torch.utils.data.Dataset):
                 f"CSV file requires columns 'pdb, Hchain, Lchain': found {df.columns}"
             )
             sys.exit(1)
-
-        if verbose:
-            log.info(f"Populating {len(df)} PDBs from {pdb_csv}")
 
         # Create list of PDB paths and check that they exist
         pdb_path_list = []
@@ -194,12 +201,12 @@ if __name__ == "__main__":
     # Hyperparams
     batch_size = 2
 
-    # PDBs to load
-    csv_pdbs = "data/example_pdbs.csv"
+    # Prep dataset
     dataset = InverseData()
 
     # Load actual PDBs, filtered on Paragraph
-    dataset.populate(pdb_csv=csv_pdbs, pdb_dir="data/pdbs", verbose=2)
+    pdbs_csv = "data/example_pdbs.csv"
+    dataset.populate(pdbs_csv_or_dataframe=pdbs_csv, pdb_dir="data/pdbs", verbose=2)
 
     print("Test 1: Dataset")
     coords, confidence, seq, res_pos, posins_list, loss_mask, targets = next(
