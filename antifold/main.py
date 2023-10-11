@@ -39,17 +39,38 @@ def cmdline_args():
         else:
             return arg
 
+    def is_valid_dir(parser, arg):
+        if not os.path.isdir(arg):
+            parser.error(f"Directory {arg} does not exist!")
+        else:
+            return arg
+
+    p.add_argument(
+        "--pdb_file",
+        help="Input PDB file (for single PDB predictions)",
+        type=lambda x: is_valid_path(p, x),
+    )
+
+    p.add_argument(
+        "--heavy_chain",
+        help="Ab heavy chain (for single PDB predictions)",
+    )
+
+    p.add_argument(
+        "--light_chain",
+        help="Ab light chain (for single PDB predictions)",
+    )
+
     p.add_argument(
         "--pdbs_csv",
-        required=True,
-        help="Input CSV file with PDB names and H/L chains",
+        help="Input CSV file with PDB names and H/L chains (multi-PDB predictions)",
         type=lambda x: is_valid_path(p, x),
     )
 
     p.add_argument(
         "--pdb_dir",
-        required=True,
-        help="Directory with input PDB files",
+        help="Directory with input PDB files (multi-PDB predictions)",
+        type=lambda x: is_valid_dir(p, x),
     )
 
     p.add_argument(
@@ -113,7 +134,6 @@ def cmdline_args():
         "--model_path",
         default="models/model.pt",
         help="Output directory",
-        type=lambda x: is_valid_path(p, x),
     )
 
     p.add_argument(
@@ -158,8 +178,8 @@ def sample_pdbs(
         # Sample 10 sequences with a temperature of 0.50
         fasta_dict = sample_from_df_logits(
             df_logits,
-            sample_n=10,
-            sampling_temp=0.50,
+            sample_n=sample_n,
+            sampling_temp=sampling_temp,
             regions_to_mutate=regions_to_mutate,
             limit_expected_variation=False,
             verbose=True,
@@ -178,6 +198,63 @@ def sample_pdbs(
     return pdb_output_dict
 
 
+def check_valid_input(args):
+    """Checks for valid arguments"""
+
+    # Check valid input files input arguments
+    # Check either: PDB file, PDB dir or PDBs CSV inputted
+    if not (args.pdb_file or (args.pdb_dir and args.pdbs_csv)):
+        log.error(
+            f"""Please choose one of:
+        1) PDB file (--pdb_file) with --heavy_chain [letter] and --light_chain [letter]
+        2) PDB directory (--pdb_dir) and CSV file (--pdbs_csv) with columns for PDB names (pdb), H (Hchain) and L (Lchain) chains
+        """
+        )
+        sys.exit(1)
+
+    # Option 1: PDB file, check heavy and light chain
+    if args.pdb_file:
+        if not (args.heavy_chain and args.light_chain):
+            log.error(
+                f"Single PDB input: Please specify --heavy_chain and --light_chain (e.g. --heavy_chain H --light_chain L)"
+            )
+            sys.exit(1)
+
+    # Option 2: Check PDBs in PDB dir and CSV formatted correctly
+    if args.pdb_dir and args.pdbs_csv:
+        # Check CSV formatting
+        df = pd.read_csv(args.pdbs_csv)
+        if not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() >= 3:
+            log.error(
+                f"Multi-PDB input: Please specify CSV  with columns ['pdb', 'Hchain', 'Lchain'] with PDB names (no extension), H and L chains"
+            )
+            log.error(f"CSV columns: {df.columns}")
+            sys.exit(1)
+
+        # Check PDBs exist
+        missing = 0
+        for i, _pdb in enumerate(df["pdb"].values):
+            pdb_path = f"{args.pdb_dir}/{_pdb}.pdb"
+            if not os.path.exists(pdb_path):
+                log.warning(
+                    f"WARNING missing PDBs ({missing+1}), PDB does not exist: {pdb_path}"
+                )
+                missing += 1
+
+        if missing >= 1:
+            log.error(
+                f"Missing {missing} PDBs specified in {args.pdbs_csv} CSV file but not found in {args.pdb_dir}"
+            )
+            sys.exit(1)
+
+    # Check model exists, or set to ESM-IF1
+    if not args.model_path or args.model_path == "ESM-IF1" or args.model_path == "IF1":
+        log.info(
+            f"Model path not specified or set to ESM-IF1. Using ESM-IF1 model instead of AntiFold fine-tuned model"
+        )
+        args.model_path = ""
+
+
 def main(args):
     """Predicts antibody heavy and light chain inverse folding probabilities"""
 
@@ -193,21 +270,33 @@ def main(args):
         except ValueError:
             regions_to_mutate.append(region)
 
-    # Get number of PDBs from CSV
-    df = pd.read_csv(args.pdbs_csv)
+    # Option 1: Single PDB
+    if args.pdb_file:
+        _pdb = os.path.splitext(os.path.basename(args.pdb_file))[0]
+        pdbs_csv = pd.DataFrame(
+            {"pdb": _pdb, "Hchain": args.heavy_chain, "Lchain": args.light_chain},
+            index=[0],
+        )
+        pdb_dir = os.path.dirname(args.pdb_file)
+
+    # Option 2: CSV + PDB dir
+    else:
+        pdbs_csv = pd.read_csv(args.pdbs_csv)
+        pdb_dir = args.pdb_dir
+
     log.info(
-        f"Will sample {args.num_seq_per_target} sequences from {len(df.values)} PDBs at temperature(s) {args.sampling_temp} and regions: {regions_to_mutate}"
+        f"Will sample {args.num_seq_per_target} sequences from {len(pdbs_csv.values)} PDBs at temperature(s) {args.sampling_temp} and regions: {regions_to_mutate}"
     )
 
-    # Load model
+    # Load AntiFold or ESM-IF1 model
     model = load_IF1_model(args.model_path)
 
     # Get dict with PDBs, sampled sequences and logits / log_odds DataFrame
     pdb_output_dict = sample_pdbs(
         model=model,
-        pdbs_csv_or_dataframe=args.pdbs_csv,
+        pdbs_csv_or_dataframe=pdbs_csv,
+        pdb_dir=pdb_dir,
         regions_to_mutate=regions_to_mutate,
-        pdb_dir=args.pdb_dir,
         out_dir=args.out_dir,
         sample_n=args.num_seq_per_target,
         sampling_temp=args.sampling_temp,
@@ -228,7 +317,7 @@ if __name__ == "__main__":
     log_path = os.path.abspath(f"{args.out_dir}/log.txt")
 
     logging.basicConfig(
-        level=logging.ERROR,
+        level=logging.INFO,
         format="[{asctime}] {message}",
         style="{",
         handlers=[
@@ -246,5 +335,15 @@ if __name__ == "__main__":
     elif args.verbose >= 2:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    log.info(f"Sampling PDBs with Antifold ...")
-    main(args)
+    # Check valid input
+    check_valid_input(args)
+    print(args)
+
+    try:
+        log.info(f"Sampling PDBs with Antifold ...")
+        main(args)
+
+    except Exception as E:
+        log.exception(
+            f"Prediction encountered an unexpected error. This is likely a bug in the server software: {E}"
+        )

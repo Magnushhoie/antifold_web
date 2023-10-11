@@ -1,6 +1,5 @@
 import logging
 
-logging.basicConfig(level=logging.INFO, format="[{asctime}] {message}", style="{")
 log = logging.getLogger(__name__)
 
 import sys

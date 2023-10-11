@@ -4,6 +4,7 @@ antifold_web
 Code for AntiFold paper, submitted for NeurIPS 2023.
 
 Code and model: [antifold.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip)
+Model: [model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt)
 
 ## Quickstart guide
 

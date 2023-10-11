@@ -5,7 +5,6 @@
 
 import logging
 
-logging.basicConfig(level=logging.INFO, format="[{asctime}] {message}", style="{")
 log = logging.getLogger(__name__)
 
 from typing import List, Sequence, Tuple
