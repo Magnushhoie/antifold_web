@@ -30,18 +30,20 @@ pip install .
 ```bash
 # Run on single PDB, CDRH3 only
 python antifold/main.py \
-    --pdb_file data/6y1l_imgt.pdb \
     --out_dir output/single_pdb \
+    --pdb_file data/pdbs/6y1l_imgt.pdb \
+    --heavy chain H \
+    --light chain L \
     --sampling_temp 0.2 \
-    --regions CDRH3 \
+    --regions CDRH3
 
 # Run on example pdbs, all CDRs
 python antifold/main.py \
+    --out_dir output/example_pdbs \
     --pdbs_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
-    --out_dir output/example_pdbs
     --sampling_temp 0.2 \
-    --regions CDR1 CDR2 CDR3 \
+    --regions CDR1 CDR2 CDR3
 ```
 
 ## Example output
@@ -113,16 +115,22 @@ usage:
     # Predict on example PDBs in folder
     python antifold/main.py     --pdbs_csv data/example_pdbs.csv     --pdb_dir data/pdbs     --out_dir output/
     
+
 Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained fold.
 Requires IMGT-numbered PDBs with paired heavy and light chains.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --pdbs_csv PDBS_CSV   Input CSV file with PDB names and H/L chains
-  --pdb_dir PDB_DIR     Directory with input PDB files
+  --pdb_file PDB_FILE   Input PDB file (for single PDB predictions)
+  --heavy_chain HEAVY_CHAIN
+                        Ab heavy chain (for single PDB predictions)
+  --light_chain LIGHT_CHAIN
+                        Ab light chain (for single PDB predictions)
+  --pdbs_csv PDBS_CSV   Input CSV file with PDB names and H/L chains (multi-PDB predictions)
+  --pdb_dir PDB_DIR     Directory with input PDB files (multi-PDB predictions)
   --out_dir OUT_DIR     Output directory
   --regions REGIONS [REGIONS ...]
-                        Space-separated list of regions to mutate (e.g., CDR1 CDR2 CDRH3).
+                        Space-separated list of regions to mutate (e.g., CDR1 CDR2 CDR3H).
   --num_seq_per_target NUM_SEQ_PER_TARGET
                         Number of sequences to sample from each antibody PDB
   --sampling_temp SAMPLING_TEMP [SAMPLING_TEMP ...]
@@ -132,6 +140,8 @@ optional arguments:
   --exclude_light       Exclude light chain from sampling
   --batch_size BATCH_SIZE
                         Batch-size to use
+  --num_threads NUM_THREADS
+                        Number of CPU threads to use for parallel processing (default 0 = all available)
   --seed SEED           Seed for reproducibility
   --model_path MODEL_PATH
                         Output directory

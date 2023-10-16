@@ -124,6 +124,13 @@ def cmdline_args():
     )
 
     p.add_argument(
+        "--num_threads",
+        default=0,
+        type=int,
+        help="Number of CPU threads to use for parallel processing (0 = all available)",
+    )
+
+    p.add_argument(
         "--seed",
         default=42,
         type=int,
@@ -158,6 +165,7 @@ def sample_pdbs(
     exclude_heavy=False,
     exclude_light=False,
     batch_size=1,
+    num_threads=0,
     seed=42,
     save_flag=False,
 ):
@@ -170,6 +178,7 @@ def sample_pdbs(
         save_flag=save_flag,
         batch_size=1,
         seed=42,
+        num_threads=num_threads,
     )
 
     # Sample from output probabilities
@@ -304,6 +313,7 @@ def main(args):
         exclude_heavy=args.exclude_heavy,
         exclude_light=args.exclude_light,
         batch_size=args.batch_size,
+        num_threads=args.num_threads,
         seed=args.seed,
         save_flag=True,
     )

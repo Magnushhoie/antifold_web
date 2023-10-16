@@ -156,8 +156,13 @@ def logits_to_seqprobs_list(logits, tokens):
     return seqprobs_list
 
 
-def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size):
+def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size, num_threads=0):
     """Prepares dataset/dataoader from CSV file containing PDB paths and H/L chains"""
+
+    # Set number of threads & workers
+    if num_threads >= 1:
+        torch.set_num_threads(num_threads)
+        num_threads = min(num_threads, 4)
 
     # Load PDB coordinates
     dataset = InverseData(
@@ -172,6 +177,7 @@ def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size):
         batch_size=batch_size,
         shuffle=False,
         collate_fn=CoordBatchConverter_mask_gpu(alphabet),
+        num_workers=num_threads,
     )
 
     return dataset, dataloader
@@ -334,6 +340,7 @@ def get_pdbs_logits(
     pdb_dir,
     out_dir=False,
     batch_size=1,
+    num_threads=0,
     save_flag=True,
     float_format="%.4f",
     seed=42,
@@ -347,7 +354,7 @@ def get_pdbs_logits(
 
     # Load PDBs
     dataset, dataloader = get_dataset_dataloader(
-        pdbs_csv_or_dataframe, pdb_dir, batch_size=batch_size
+        pdbs_csv_or_dataframe, pdb_dir, batch_size=batch_size, num_threads=num_threads
     )
 
     # Predict PDBs -> df_logits

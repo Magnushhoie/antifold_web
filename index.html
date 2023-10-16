@@ -9,7 +9,8 @@
           <div id='content'>
       <h1 id="antifold_web">antifold_web</h1>
 <p>Code for AntiFold paper, submitted for NeurIPS 2023.</p>
-<p>Code and model: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip">antifold.zip</a></p>
+<p>Code and model: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip">antifold.zip</a><br />
+Model: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt">model.pt</a></p>
 <h2 id="quickstart-guide">Quickstart guide</h2>
 <p>See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">Google Colab</a> or follow quickstart guide with example PDBs:</p>
 <pre><code class="hljs bash language-bash"><span class="hljs-comment"># Download</span>
@@ -26,16 +27,49 @@ conda install -c conda-forge pip -y
 
 <span class="hljs-comment"># Install AntiFold</span>
 pip install .
-
-<span class="hljs-comment"># Run on example pdbs</span>
-python antifold/main.py \
-    --pdbs_csv data/example_pdbs.csv \
-    --sampling_temp 0.2 \
-    --regions CDR1 CDR2 CDR3H \
-    --pdb_dir data/pdbs \
-    --out_dir output/example_pdbs
 </code></pre>
-<h2 id="usage">Usage</h2>
+<pre><code class="hljs bash language-bash"><span class="hljs-comment"># Run on single PDB, CDRH3 only</span>
+python antifold/main.py \
+    --out_dir output/single_pdb \
+    --pdb_file data/pdbs/6y1l_imgt.pdb \
+    --heavy chain H \
+    --light chain L \
+    --sampling_temp 0.2 \
+    --regions CDRH3
+
+<span class="hljs-comment"># Run on example pdbs, all CDRs</span>
+python antifold/main.py \
+    --out_dir output/example_pdbs \
+    --pdbs_csv data/example_pdbs.csv \
+    --pdb_dir data/pdbs \
+    --sampling_temp 0.2 \
+    --regions CDR1 CDR2 CDR3
+</code></pre>
+<h2 id="example-output">Example output</h2>
+<p>Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a></p>
+<pre><code class="hljs csv language-csv"><span class="hljs-attribute">pdb_pos</span>,pdb_chain,aa_orig,aa_pred,pdb_posins,perplexity,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y
+<span class="hljs-attribute">2</span>,H,V,M,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>.<span class="hljs-number">7221</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9226</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">4708</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1467</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1754</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">5648</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">2163</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">5528</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">1208</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">6035</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">7443</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">0992</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">2694</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">8115</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">4361</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1866</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9160</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9723</span>,-<span class="hljs-number">3</span>.<span class="hljs-number">7213</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">9959</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">1096</span>
+<span class="hljs-attribute">3</span>,H,Q,Q,<span class="hljs-number">3</span>,<span class="hljs-number">1</span>.<span class="hljs-number">8164</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">5358</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3109</span>,-<span class="hljs-number">8</span>.<span class="hljs-number">1272</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">2464</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">4795</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">1501</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">2837</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">4261</span>,-<span class="hljs-number">2</span>.<span class="hljs-number">0793</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">4281</span>,-<span class="hljs-number">8</span>.<span class="hljs-number">6754</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">7362</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">2200</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">1787</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">4097</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">2673</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">3677</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">0966</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">2125</span>,-<span class="hljs-number">11</span>.<span class="hljs-number">0414</span>
+<span class="hljs-attribute">4</span>,H,L,L,<span class="hljs-number">4</span>,<span class="hljs-number">1</span>.<span class="hljs-number">0017</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">7056</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">7263</span>,-<span class="hljs-number">17</span>.<span class="hljs-number">5119</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3137</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">0561</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">7474</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">7022</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">1318</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">2906</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">0001</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">5772</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">8369</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">1303</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3832</span>,-<span class="hljs-number">15</span>.<span class="hljs-number">3246</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">9911</span>,-<span class="hljs-number">17</span>.<span class="hljs-number">1241</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">8850</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">3156</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">4724</span>
+</code></pre>
+<p>Output FASTA file with sampled sequences: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.fasta">6y1l_imgt.fasta</a></p>
+<ul>
+<li>Score: average log-odds of residues in the sampled region</li>
+<li>Global: average log-odds of all residues (IMGT positions 1-128)</li>
+</ul>
+<pre><code class="hljs fasta language-fasta">&gt;6y1l_imgt , <span class="hljs-attribute">score</span>=0.3504, <span class="hljs-attribute">global_score</span>=0.3504, regions=[<span class="hljs-string">&#x27;CDR1&#x27;</span>, <span class="hljs-string">&#x27;CDR2&#x27;</span>, <span class="hljs-string">&#x27;CDR3H&#x27;</span>], <span class="hljs-attribute">model_name</span>=AntiFold, <span class="hljs-attribute">seed</span>=42
+VQLQESGPGLVKPSETLSLTCAVSGYSISSGYYWGWIRQPPGKGLEWIGSIYHSGSTYYN
+PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLTQSSHNDANWGQGTLVTVSS/V
+LTQPPSVSAAPGQKVTISCSGSSSNIGNNYVSWYQQLPGTAPKRLIYDNNKRPSGIPDRF
+SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
+&gt; <span class="hljs-attribute">T</span>=0.50, <span class="hljs-attribute">sample</span>=1, <span class="hljs-attribute">score</span>=0.5675, <span class="hljs-attribute">global_score</span>=0.2636, <span class="hljs-attribute">seq_recovery</span>=0.8898, <span class="hljs-attribute">mutations</span>=13
+VQLQESGPGLVKPSETLSLTCAVSGASITSSYYWGWIRQPPGKGLEWIGSIYYSGTTYYN
+PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLYGSPYSTPAWGQGTLVTVSS/V
+LTQPPSVSAAPGQKVTISCSGSSSNIGNNYVSWYQQLPGTAPKRLIYDNNKRPSGIPDRF
+SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
+</code></pre>
+<h2 id="example-notebook">Example notebook</h2>
+<p>Notebook: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">colab.ipynb</a></p>
 <pre><code class="hljs python language-python"><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd
 
 <span class="hljs-comment"># Put IMGT numbered PDBs (Fv only, IMGT position 1-128) to process and load a CSV file with PDB names and heavy/light chains</span>
@@ -70,32 +104,7 @@ df_logprobs = pdb_output_dict[<span class="hljs-string">&quot;6y1l_imgt&quot;</s
 <span class="hljs-comment"># Sampled sequences</span>
 fasta_dict = pdb_output_dict[<span class="hljs-string">&quot;6y1l_imgt&quot;</span>][<span class="hljs-string">&quot;sequences&quot;</span>]
 </code></pre>
-<h2 id="example-output">Example output</h2>
-<p>Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a></p>
-<pre><code class="hljs csv language-csv"><span class="hljs-attribute">pdb_pos</span>,pdb_chain,aa_orig,aa_pred,pdb_posins,perplexity,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y
-<span class="hljs-attribute">2</span>,H,V,M,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>.<span class="hljs-number">7221</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9226</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">4708</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1467</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1754</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">5648</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">2163</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">5528</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">1208</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">6035</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">7443</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">0992</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">2694</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">8115</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">4361</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1866</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9160</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9723</span>,-<span class="hljs-number">3</span>.<span class="hljs-number">7213</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">9959</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">1096</span>
-<span class="hljs-attribute">3</span>,H,Q,Q,<span class="hljs-number">3</span>,<span class="hljs-number">1</span>.<span class="hljs-number">8164</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">5358</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3109</span>,-<span class="hljs-number">8</span>.<span class="hljs-number">1272</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">2464</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">4795</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">1501</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">2837</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">4261</span>,-<span class="hljs-number">2</span>.<span class="hljs-number">0793</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">4281</span>,-<span class="hljs-number">8</span>.<span class="hljs-number">6754</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">7362</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">2200</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">1787</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">4097</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">2673</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">3677</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">0966</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">2125</span>,-<span class="hljs-number">11</span>.<span class="hljs-number">0414</span>
-<span class="hljs-attribute">4</span>,H,L,L,<span class="hljs-number">4</span>,<span class="hljs-number">1</span>.<span class="hljs-number">0017</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">7056</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">7263</span>,-<span class="hljs-number">17</span>.<span class="hljs-number">5119</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3137</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">0561</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">7474</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">7022</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">1318</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">2906</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">0001</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">5772</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">8369</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">1303</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3832</span>,-<span class="hljs-number">15</span>.<span class="hljs-number">3246</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">9911</span>,-<span class="hljs-number">17</span>.<span class="hljs-number">1241</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">8850</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">3156</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">4724</span>
-</code></pre>
-<p>Output FASTA file with sampled sequences: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.fasta">6y1l_imgt.fasta</a></p>
-<ul>
-<li>Score: average log-odds of residues in the sampled region</li>
-<li>Global: average log-odds of all residues (IMGT positions 1-128)</li>
-</ul>
-<pre><code class="hljs fasta language-fasta">&gt;6y1l_imgt , <span class="hljs-attribute">score</span>=0.3504, <span class="hljs-attribute">global_score</span>=0.3504, regions=[<span class="hljs-string">&#x27;CDR1&#x27;</span>, <span class="hljs-string">&#x27;CDR2&#x27;</span>, <span class="hljs-string">&#x27;CDR3H&#x27;</span>], <span class="hljs-attribute">model_name</span>=AntiFold, <span class="hljs-attribute">seed</span>=42
-VQLQESGPGLVKPSETLSLTCAVSGYSISSGYYWGWIRQPPGKGLEWIGSIYHSGSTYYN
-PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLTQSSHNDANWGQGTLVTVSS/V
-LTQPPSVSAAPGQKVTISCSGSSSNIGNNYVSWYQQLPGTAPKRLIYDNNKRPSGIPDRF
-SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
-&gt; <span class="hljs-attribute">T</span>=0.50, <span class="hljs-attribute">sample</span>=1, <span class="hljs-attribute">score</span>=0.5675, <span class="hljs-attribute">global_score</span>=0.2636, <span class="hljs-attribute">seq_recovery</span>=0.8898, <span class="hljs-attribute">mutations</span>=13
-VQLQESGPGLVKPSETLSLTCAVSGASITSSYYWGWIRQPPGKGLEWIGSIYYSGTTYYN
-PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLYGSPYSTPAWGQGTLVTVSS/V
-LTQPPSVSAAPGQKVTISCSGSSSNIGNNYVSWYQQLPGTAPKRLIYDNNKRPSGIPDRF
-SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
-</code></pre>
-<h2 id="example-notebook">Example notebook</h2>
-<p>Notebook: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">colab.ipynb</a></p>
-<h2 id="usage-1">Usage</h2>
+<h2 id="usage">Usage</h2>
 <pre><code class="hljs bash language-bash">usage: 
     <span class="hljs-comment"># Predict on example PDBs in folder</span>
     python antifold/main.py     --pdbs_csv data/example_pdbs.csv     --pdb_dir data/pdbs     --out_dir output/
@@ -106,8 +115,13 @@ Requires IMGT-numbered PDBs with paired heavy and light chains.
 
 optional arguments:
   -h, --<span class="hljs-built_in">help</span>            show this <span class="hljs-built_in">help</span> message and <span class="hljs-built_in">exit</span>
-  --pdbs_csv PDBS_CSV   Input CSV file with PDB names and H/L chains
-  --pdb_dir PDB_DIR     Directory with input PDB files
+  --pdb_file PDB_FILE   Input PDB file (<span class="hljs-keyword">for</span> single PDB predictions)
+  --heavy_chain HEAVY_CHAIN
+                        Ab heavy chain (<span class="hljs-keyword">for</span> single PDB predictions)
+  --light_chain LIGHT_CHAIN
+                        Ab light chain (<span class="hljs-keyword">for</span> single PDB predictions)
+  --pdbs_csv PDBS_CSV   Input CSV file with PDB names and H/L chains (multi-PDB predictions)
+  --pdb_dir PDB_DIR     Directory with input PDB files (multi-PDB predictions)
   --out_dir OUT_DIR     Output directory
   --regions REGIONS [REGIONS ...]
                         Space-separated list of regions to mutate (e.g., CDR1 CDR2 CDR3H).
@@ -120,10 +134,44 @@ optional arguments:
   --exclude_light       Exclude light chain from sampling
   --batch_size BATCH_SIZE
                         Batch-size to use
+  --num_threads NUM_THREADS
+                        Number of CPU threads to use <span class="hljs-keyword">for</span> parallel processing (default 0 = all available)
   --seed SEED           Seed <span class="hljs-keyword">for</span> reproducibility
   --model_path MODEL_PATH
                         Output directory
   --verbose VERBOSE     Verbose printing
+</code></pre>
+<h2 id="imgt-regions-dict">IMGT regions dict</h2>
+<pre><code class="hljs python language-python">IMGT_dict = {
+    <span class="hljs-string">&quot;all&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">128</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;allH&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">128</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;allL&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">128</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWH&quot;</span>: <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">26</span> + <span class="hljs-number">1</span>)) + <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">40</span>, <span class="hljs-number">55</span> + <span class="hljs-number">1</span>)) + <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">66</span>, <span class="hljs-number">104</span> + <span class="hljs-number">1</span>)),
+    <span class="hljs-string">&quot;FWL&quot;</span>: <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">26</span> + <span class="hljs-number">1</span>)) + <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">40</span>, <span class="hljs-number">55</span> + <span class="hljs-number">1</span>)) + <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">66</span>, <span class="hljs-number">104</span> + <span class="hljs-number">1</span>)),
+    <span class="hljs-string">&quot;CDRH&quot;</span>: <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">27</span>, <span class="hljs-number">39</span>)) + <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">56</span>, <span class="hljs-number">65</span> + <span class="hljs-number">1</span>)) + <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">105</span>, <span class="hljs-number">117</span> + <span class="hljs-number">1</span>)),
+    <span class="hljs-string">&quot;CDRL&quot;</span>: <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">27</span>, <span class="hljs-number">39</span>)) + <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">56</span>, <span class="hljs-number">65</span> + <span class="hljs-number">1</span>)) + <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(<span class="hljs-number">105</span>, <span class="hljs-number">117</span> + <span class="hljs-number">1</span>)),
+    <span class="hljs-string">&quot;FW1&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">26</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWH1&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">26</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWL1&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">26</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;CDR1&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">27</span>, <span class="hljs-number">39</span>),
+    <span class="hljs-string">&quot;CDRH1&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">27</span>, <span class="hljs-number">39</span>),
+    <span class="hljs-string">&quot;CDRL1&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">27</span>, <span class="hljs-number">39</span>),
+    <span class="hljs-string">&quot;FW2&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">40</span>, <span class="hljs-number">55</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWH2&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">40</span>, <span class="hljs-number">55</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWL2&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">40</span>, <span class="hljs-number">55</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;CDR2&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">56</span>, <span class="hljs-number">65</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;CDRH2&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">56</span>, <span class="hljs-number">65</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;CDRL2&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">56</span>, <span class="hljs-number">65</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FW3&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">66</span>, <span class="hljs-number">104</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWH3&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">66</span>, <span class="hljs-number">104</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWL3&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">66</span>, <span class="hljs-number">104</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;CDR3&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">105</span>, <span class="hljs-number">117</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;CDRH3&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">105</span>, <span class="hljs-number">117</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;CDRL3&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">105</span>, <span class="hljs-number">117</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FW4&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">118</span>, <span class="hljs-number">128</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWH4&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">118</span>, <span class="hljs-number">128</span> + <span class="hljs-number">1</span>),
+    <span class="hljs-string">&quot;FWL4&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">118</span>, <span class="hljs-number">128</span> + <span class="hljs-number">1</span>),
+}
 </code></pre>
 
           </div>
