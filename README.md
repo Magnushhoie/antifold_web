@@ -32,8 +32,8 @@ pip install .
 python antifold/main.py \
     --out_dir output/single_pdb \
     --pdb_file data/pdbs/6y1l_imgt.pdb \
-    --heavy chain H \
-    --light chain L \
+    --heavy_chain H \
+    --light_chain L \
     --sampling_temp 0.2 \
     --regions CDRH3
 
