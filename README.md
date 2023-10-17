@@ -11,7 +11,7 @@ Model: [model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/mod
 See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">Google Colab</a> or follow quickstart guide with example PDBs:
 
 ```bash
-# Download full Antifold code + models/model.pt
+# Download full Antifold code + model
 # For just models/model.pt use: https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt
 mkdir antifold && cd antifold
 wget https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip
