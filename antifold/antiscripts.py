@@ -126,13 +126,12 @@ def get_dataset_pdb_name_res_posins_chains(dataset, idx):
     pdb_res = [aa for aa in seq if aa != "-"]
 
     # Position + insertion codes - gaps
-    posins = dataset[idx][4]
-    pdb_posins = [p for p in posins if p != "nan"]
+    posinschain = dataset[idx][4]
+    posinschain = [p for p in posinschain if p != "nan"]
 
-    # PDB chains (Always H + L), can infer L idxs from L length
-    pdb_chains = np.array([pdb_info["Hchain"]] * len(pdb_posins))
-    L_length = len(posins) - np.where(np.array(posins) == "nan")[0].max()
-    pdb_chains[-L_length:] = pdb_info["Lchain"]
+    # Extract position + insertion code + chain (1-letter)
+    pdb_posins = [p[:-1] for p in posinschain]
+    pdb_chains = [p[-1] for p in posinschain]
 
     return pdb_name, pdb_res, pdb_posins, pdb_chains
 
@@ -214,7 +213,7 @@ def dataset_dataloader_to_predictions_list(model, dataset, dataloader, batch_siz
             padding_mask,
             loss_masks,
             res_pos,
-            posins_list,
+            posinschain_list,
             targets,
         ) = batch
 

@@ -309,14 +309,14 @@ class CoordBatchConverter_mask_gpu(BatchConverter):
         batch = []
         loss_masks = []
         pos_list = []
-        posins_list = []
+        posinschain_list = []
         targets_list = []
         for (
             coords,
             confidence,
             seq,
             res_pos,
-            res_posins,
+            res_posinschain,
             loss_mask,
             targets,
         ) in raw_batch:
@@ -329,7 +329,7 @@ class CoordBatchConverter_mask_gpu(BatchConverter):
             batch.append(((coords, confidence), seq))
             loss_masks.append(loss_mask)
             pos_list.append(res_pos)
-            posins_list.append(res_posins)
+            posinschain_list.append(res_posinschain)
             targets_list.append(targets)
 
         coords_and_confidence, strs, tokens = super().__call__(batch)
@@ -382,7 +382,7 @@ class CoordBatchConverter_mask_gpu(BatchConverter):
             padding_mask,
             loss_masks,
             res_pos,
-            posins_list,
+            posinschain_list,
             targets,
         )
 
@@ -480,14 +480,14 @@ class CoordBatchConverter_mask(BatchConverter):
         batch = []
         loss_masks = []
         pos_list = []
-        posins_list = []
+        posinschain_list = []
         targets_list = []
         for (
             coords,
             confidence,
             seq,
             res_pos,
-            res_posins,
+            res_posinschain,
             loss_mask,
             targets,
         ) in raw_batch:
@@ -500,7 +500,7 @@ class CoordBatchConverter_mask(BatchConverter):
             batch.append(((coords, confidence), seq))
             loss_masks.append(loss_mask)
             pos_list.append(res_pos)
-            posins_list.append(res_posins)
+            posinschain_list.append(res_posinschain)
             targets_list.append(targets)
 
         coords_and_confidence, strs, tokens = super().__call__(batch)
@@ -539,7 +539,7 @@ class CoordBatchConverter_mask(BatchConverter):
             padding_mask,
             loss_masks,
             res_pos,
-            posins_list,
+            posinschain_list,
             targets,
         )
 

@@ -186,30 +186,31 @@ def sample_pdbs(
         num_threads=num_threads,
     )
 
-    # Sample from output probabilities
-    pdb_output_dict = {}
-    for df_logits in df_logits_list:
-        # Sample 10 sequences with a temperature of 0.50
-        fasta_dict = sample_from_df_logits(
-            df_logits,
-            sample_n=sample_n,
-            sampling_temp=sampling_temp,
-            regions_to_mutate=regions_to_mutate,
-            limit_expected_variation=False,
-            verbose=True,
-        )
+    if sample_n >= 1:
+        # Sample from output probabilities
+        pdb_output_dict = {}
+        for df_logits in df_logits_list:
+            # Sample 10 sequences with a temperature of 0.50
+            fasta_dict = sample_from_df_logits(
+                df_logits,
+                sample_n=sample_n,
+                sampling_temp=sampling_temp,
+                regions_to_mutate=regions_to_mutate,
+                limit_expected_variation=False,
+                verbose=True,
+            )
 
-        pdb_output_dict[df_logits.name] = {
-            "sequences": fasta_dict,
-            "logits": df_logits,
-            "logprobs": df_logits_to_logprobs(df_logits),
-        }
+            pdb_output_dict[df_logits.name] = {
+                "sequences": fasta_dict,
+                "logits": df_logits,
+                "logprobs": df_logits_to_logprobs(df_logits),
+            }
 
-        # Write to file
-        if save_flag:
-            write_fasta_to_dir(fasta_dict, df_logits, out_dir=out_dir)
+            # Write to file
+            if save_flag:
+                write_fasta_to_dir(fasta_dict, df_logits, out_dir=out_dir)
 
-    return pdb_output_dict
+        return pdb_output_dict
 
 
 def check_valid_input(args):

@@ -57,16 +57,16 @@ class InverseData(torch.utils.data.Dataset):
         """
 
         # coords, seq = esm.inverse_folding.util.load_coords(fpath=pdb_path, chain=chain)
-        coords_dict, seq_dict, pos_dict, posins_dict = load_complex_coords(
+        coords_dict, seq_dict, pos_dict, posinschain_dict = load_complex_coords(
             pdb_path, [Hchain, Lchain]
         )
         (
             coords_concatenated,
             seq_concatenated,
             pos_concatenated,
-            posins_concatenated,
+            posinschain_concatenated,
         ) = concatenate_coords_HL(
-            coords_dict, seq_dict, pos_dict, posins_dict, heavy_chain_id=Hchain
+            coords_dict, seq_dict, pos_dict, posinschain_dict, heavy_chain_id=Hchain
         )
 
         # Limit to IMGT VH/VL regions (pos 1-128)
@@ -75,7 +75,7 @@ class InverseData(torch.utils.data.Dataset):
             coords_concatenated,
             seq_concatenated,
             pos_concatenated,
-            posins_concatenated,
+            posinschain_concatenated,
         )
 
     def load_coords_any(
@@ -94,20 +94,23 @@ class InverseData(torch.utils.data.Dataset):
         """
 
         # Get all chains
-        coords_dict, seq_dict, pos_dict, posins_dict = load_complex_coords(
+        coords_dict, seq_dict, pos_dict, posinschain_dict = load_complex_coords(
             pdb_path,
             chains,
         )
 
         # Concatenate
-        first_chain = chains[0]
         (
             coords_concatenated,
             seq_concatenated,
             pos_concatenated,
-            posins_concatenated,
+            posinschain_concatenated,
         ) = concatenate_coords_any(
-            coords_dict, seq_dict, pos_dict, posins_dict, first_chain_id=first_chain
+            coords_dict,
+            seq_dict,
+            pos_dict,
+            posinschain_dict,
+            chains,
         )
 
         # Limit to IMGT VH/VL regions (pos 1-128)
@@ -116,7 +119,7 @@ class InverseData(torch.utils.data.Dataset):
             coords_concatenated,
             seq_concatenated,
             pos_concatenated,
-            posins_concatenated,
+            posinschain_concatenated,
         )
 
     def add_gaussian_noise(self, coords: np.array, scale=0.1):
