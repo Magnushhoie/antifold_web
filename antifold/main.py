@@ -62,6 +62,11 @@ def cmdline_args():
     )
 
     p.add_argument(
+        "--antigen_chain",
+        help="Antigen chain (experimental)",
+    )
+
+    p.add_argument(
         "--pdbs_csv",
         help="Input CSV file with PDB names and H/L chains (multi-PDB predictions)",
         type=lambda x: is_valid_path(p, x),
@@ -245,9 +250,7 @@ def check_valid_input(args):
         for i, _pdb in enumerate(df["pdb"].values):
             pdb_path = f"{args.pdb_dir}/{_pdb}.pdb"
             if not os.path.exists(pdb_path):
-                log.warning(
-                    f"WARNING missing PDBs ({missing+1}), PDB does not exist: {pdb_path}"
-                )
+                log.warning(f"WARNING: PDB ({missing+1}) does not exist: {pdb_path}")
                 missing += 1
 
         if missing >= 1:
@@ -283,7 +286,12 @@ def main(args):
     if args.pdb_file:
         _pdb = os.path.splitext(os.path.basename(args.pdb_file))[0]
         pdbs_csv = pd.DataFrame(
-            {"pdb": _pdb, "Hchain": args.heavy_chain, "Lchain": args.light_chain},
+            {
+                "pdb": _pdb,
+                "Hchain": args.heavy_chain,
+                "Lchain": args.light_chain,
+                "Agchain": args.antigen_chain,
+            },
             index=[0],
         )
         pdb_dir = os.path.dirname(args.pdb_file)

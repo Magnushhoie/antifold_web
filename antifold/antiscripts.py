@@ -148,7 +148,7 @@ def logits_to_seqprobs_list(logits, tokens):
 
     # Check that only 10x gap ("-") per sequence!
     batch_size = logits.shape[0]
-    assert (mask_gap == False).sum() == batch_size * 10
+    # assert (mask_gap == False).sum() == batch_size * 10
 
     # Filter out gap (-) and padding (<pad>) positions, only keep 21x amino-acid probs (4:24) + "X"
     seqprobs_list = [logits[i, 4:25, mask_combined[i]] for i in range(len(logits))]

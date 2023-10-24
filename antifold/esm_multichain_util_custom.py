@@ -200,6 +200,66 @@ def concatenate_coords_HL(
     return coords_concatenated, seq_str, pos_concatenated, posins_concatenated
 
 
+def concatenate_coords_any(
+    coords_dict, seq_dict, pos_dict, posins_dict, first_chain_id, padding_length=10
+):
+    """
+    Args:
+        coords: Dictionary mapping chain ids to L x 3 x 3 array for N, CA, C
+            coordinates representing the backbone of each chain
+        seq_dict: Dictionary mapping chain ids to native sequences of each chain
+        pos_dict: Residue position IDs (e.g. IMGT numbering)
+        first_chain_id: First chain id, always start
+        padding_length: Length of padding between concatenated chains
+    Returns:
+        Tuple (coords, seq, pos)
+            - coords_concatenated is an L x 3 x 3 array for N, CA, C coordinates, a
+              concatenation of the chains with padding in between
+            - seq_str is the extracted sequence, with padding tokens inserted
+              between the concatenated chains
+            - pos_concatenated is the residue position IDs, with NaNs inserted
+    """
+
+    pad_coords = np.full((padding_length, 3, 3), np.inf, dtype=np.float32)
+    pad_pos = np.full((padding_length), np.nan, dtype=np.float32)
+    pad_seq = "-" * padding_length
+
+    # Add heavy chain
+    coords_list = [coords_dict[first_chain_id]]
+    pos_list = [pos_dict[first_chain_id]]
+    # Position + insertion (string) # MH
+    posins_list = [posins_dict[first_chain_id]]
+    seq_str = seq_dict[first_chain_id]
+
+    # Add light chain, with 10x padding between H and L chains
+    for chain_id in coords_dict:
+        if chain_id == first_chain_id:
+            continue
+
+        coords_list.append(pad_coords)
+        coords_list.append(coords_dict[chain_id])
+        pos_list.append(pad_pos)
+        pos_list.append(pos_dict[chain_id])
+        # Position + insertion (string) # MH
+        posins_list.append(pad_pos)
+        posins_list.append(posins_dict[chain_id])
+        seq_str += pad_seq
+        seq_str += seq_dict[chain_id]
+
+    coords_concatenated = np.concatenate(coords_list, axis=0)
+    pos_concatenated = np.concatenate(pos_list, axis=0)
+    # Position + insertion (string) # MH
+    posins_concatenated = np.concatenate(posins_list, axis=0)
+
+    if not len(seq_str) == len(coords_concatenated) == len(pos_concatenated):
+        print(
+            f"Length mismatch: seq_str {len(seq_str)} coords_concatenated {len(coords_concatenated)} pos_concatenated {len(pos_concatenated)}"
+        )
+        raise ValueError
+
+    return coords_concatenated, seq_str, pos_concatenated, posins_concatenated
+
+
 def sample_sequence_in_complex(
     model, coords, target_chain_id, temperature=1.0, padding_length=10
 ):
