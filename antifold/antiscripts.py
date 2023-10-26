@@ -165,9 +165,7 @@ def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size, num_threa
         num_threads = min(num_threads, 4)
 
     # Load PDB coordinates
-    dataset = InverseData(
-        gaussian_noise_flag=False,
-    )
+    dataset = InverseData(gaussian_noise_flag=False,)
     dataset.populate(pdbs_csv_or_dataframe, pdb_dir)
 
     # Prepare torch dataloader at specified batch size
@@ -266,10 +264,7 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
 
         # Logits to DataFrame
         alphabet = antifold.esm.data.Alphabet.from_architecture("invariant_gvp")
-        df_logits = pd.DataFrame(
-            data=seq_probs,
-            columns=alphabet.all_toks[4:25],
-        )
+        df_logits = pd.DataFrame(data=seq_probs, columns=alphabet.all_toks[4:25],)
 
         # Limit to 20x amino-acids probs
         _alphabet = list("ACDEFGHIKLMNPQRSTVWY")
