@@ -212,6 +212,7 @@ class InverseData(torch.utils.data.Dataset):
                 pdb_path, pdb_info["Hchain"], pdb_info["Lchain"]
             )
 
+        '''
         if self.verbose >= 2:
             print(
                 f"""
@@ -222,10 +223,10 @@ class InverseData(torch.utils.data.Dataset):
             from {pdb_path} (Hchain {pdb_info['Hchain']}, Lchain {pdb_info['Lchain']})
             """
             )
+        '''
 
-        # If no CSV provided, fill in empty (un-used) targets shape of PDB
-        else:
-            targets = np.full(len(pos_pdb_arr_str), np.nan)
+        # Not used, included for legacy reasons
+        targets = np.full(len(pos_pdb_arr_str), np.nan)
 
         # Add (0.1 Å) gaussian noise to Ca, C, N co-ordinates
         if self.gaussian_noise_flag:

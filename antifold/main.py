@@ -52,13 +52,11 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--heavy_chain",
-        help="Ab heavy chain (for single PDB predictions)",
+        "--heavy_chain", help="Ab heavy chain (for single PDB predictions)",
     )
 
     p.add_argument(
-        "--light_chain",
-        help="Ab light chain (for single PDB predictions)",
+        "--light_chain", help="Ab light chain (for single PDB predictions)",
     )
 
     p.add_argument(
@@ -79,17 +77,13 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--out_dir",
-        default="output",
-        help="Output directory",
+        "--out_dir", default="output", help="Output directory",
     )
 
     p.add_argument(
         "--regions",
-        default=["CDR1", "CDR2", "CDR3"],
-        type=str,
-        nargs="+",
-        help="Space-separated list of regions to mutate (e.g., CDR1 CDR2 CDR3H).",
+        default="CDR1 CDR2 CDR3",
+        help="Space-separated regions to mutate (e.g., CDR1 CDR2 CDR3H).",
     )
 
     p.add_argument(
@@ -122,10 +116,7 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--batch_size",
-        default=1,
-        type=int,
-        help="Batch-size to use",
+        "--batch_size", default=1, type=int, help="Batch-size to use",
     )
 
     p.add_argument(
@@ -136,23 +127,15 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--seed",
-        default=42,
-        type=int,
-        help="Seed for reproducibility",
+        "--seed", default=42, type=int, help="Seed for reproducibility",
     )
 
     p.add_argument(
-        "--model_path",
-        default="models/model.pt",
-        help="Output directory",
+        "--model_path", default="models/model.pt", help="Output directory",
     )
 
     p.add_argument(
-        "--verbose",
-        default=1,
-        type=int,
-        help="Verbose printing",
+        "--verbose", default=1, type=int, help="Verbose printing",
     )
 
     return p.parse_args()
@@ -276,10 +259,11 @@ def main(args):
 
     # Try reading in regions
     regions_to_mutate = []
-    for region in args.regions:
+    for region in args.regions.split(" "):
+        # Either interpret as positions (ints)
         try:
-            positions = list(map(int, region.split(",")))
-            regions_to_mutate.append(positions)
+            regions_to_mutate.append(int(region))
+        # Or as regions (strings)
         except ValueError:
             regions_to_mutate.append(region)
 
@@ -291,10 +275,13 @@ def main(args):
                 "pdb": _pdb,
                 "Hchain": args.heavy_chain,
                 "Lchain": args.light_chain,
-                "Agchain": args.antigen_chain,
             },
             index=[0],
         )
+
+        if args.antigen_chain:
+            pdbs_csv.loc[0, "Agchain"] = args.antigen_chain
+            
         pdb_dir = os.path.dirname(args.pdb_file)
 
     # Option 2: CSV + PDB dir
