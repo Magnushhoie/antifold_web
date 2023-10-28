@@ -92,15 +92,18 @@ def load_IF1_checkpoint(model, checkpoint_path: str = ""):
 def load_IF1_model(checkpoint_path: str = ""):
     """Load raw/FT IF1 model"""
 
-    # Suppress regression weights warning - not needed
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        model, _ = antifold.esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
+    # Download IF1 weights
+    if not checkpoint_path or checkpoint_path == "IF1" or checkpoint_path == "ESM-IF1":
+        log.info(f"Warning: Loading pre-trained ESM-IF1 instead of AntiFold model (no checkpoint provided)")
+        # Suppress regression weights warning - not needed
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            model, _ = antifold.esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
 
+    # Load AntiFold weights locally
     if checkpoint_path:
+        model, _ = antifold.esm.pretrained._load_IF1_local()
         model = load_IF1_checkpoint(model, checkpoint_path)
-    else:
-        log.info(f"Loaded raw IF1 model (no checkpoint provided)")
 
     # Evaluation mode when predicting
     model = model.eval()
@@ -289,10 +292,12 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
         df_logits.insert(4, "pdb_posins", pdb_posins)
         df_logits.insert(5, "perplexity", perplexity)
 
-        # Skip if not IMGT numbered - 10 never found in IMGT numbered PDBs
-        if 10 in positions:
+        # Skip if not IMGT numbered - 10 never found in H-chain IMGT numbered PDBs
+        Hchain = pdb_chains[0]
+        Hpos = positions[pdb_chains == Hchain]
+        if 10 in Hpos:
             log.error(
-                f"WARNING: PDB {pdb_name}, is not IMGT numbered! Output probabilities will be incorrect. See https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/"
+                f"WARNING: PDB {pdb_name} seems to not be IMGT numbered! Output probabilities may be affected. See https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/"
             )
         # Limit to IMGT positions only (only ones trained on)
         # imgt_mask = get_imgt_mask(df_logits, imgt_regions=["all"])
