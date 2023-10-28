@@ -58,13 +58,16 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--heavy_chain",
-        help="Ab heavy chain (for single PDB predictions)",
+        "--heavy_chain", help="Ab heavy chain (for single PDB predictions)",
     )
 
     p.add_argument(
-        "--light_chain",
-        help="Ab light chain (for single PDB predictions)",
+        "--light_chain", help="Ab light chain (for single PDB predictions)",
+    )
+
+    p.add_argument(
+        "--antigen_chain",
+        help="Antigen chain (experimental)",
     )
 
     p.add_argument(
@@ -80,17 +83,13 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--out_dir",
-        default="output",
-        help="Output directory",
+        "--out_dir", default="output", help="Output directory",
     )
 
     p.add_argument(
         "--regions",
-        default=["CDR1", "CDR2", "CDR3"],
-        type=str,
-        nargs="+",
-        help="Space-separated list of regions to mutate (e.g., CDR1 CDR2 CDR3H).",
+        default="CDR1 CDR2 CDR3",
+        help="Space-separated regions to mutate (e.g., CDR1 CDR2 CDR3H).",
     )
 
     p.add_argument(
@@ -123,10 +122,7 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--batch_size",
-        default=1,
-        type=int,
-        help="Batch-size to use",
+        "--batch_size", default=1, type=int, help="Batch-size to use",
     )
 
     p.add_argument(
@@ -137,23 +133,15 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--seed",
-        default=42,
-        type=int,
-        help="Seed for reproducibility",
+        "--seed", default=42, type=int, help="Seed for reproducibility",
     )
 
     p.add_argument(
-        "--model_path",
-        default="models/model.pt",
-        help="Output directory",
+        "--model_path", default="models/model.pt", help="Output directory",
     )
 
     p.add_argument(
-        "--verbose",
-        default=1,
-        type=int,
-        help="Verbose printing",
+        "--verbose", default=1, type=int, help="Verbose printing",
     )
 
     return p.parse_args()
@@ -187,30 +175,31 @@ def sample_pdbs(
         num_threads=num_threads,
     )
 
-    # Sample from output probabilities
-    pdb_output_dict = {}
-    for df_logits in df_logits_list:
-        # Sample 10 sequences with a temperature of 0.50
-        fasta_dict = sample_from_df_logits(
-            df_logits,
-            sample_n=sample_n,
-            sampling_temp=sampling_temp,
-            regions_to_mutate=regions_to_mutate,
-            limit_expected_variation=False,
-            verbose=True,
-        )
+    if sample_n >= 1:
+        # Sample from output probabilities
+        pdb_output_dict = {}
+        for df_logits in df_logits_list:
+            # Sample 10 sequences with a temperature of 0.50
+            fasta_dict = sample_from_df_logits(
+                df_logits,
+                sample_n=sample_n,
+                sampling_temp=sampling_temp,
+                regions_to_mutate=regions_to_mutate,
+                limit_expected_variation=False,
+                verbose=True,
+            )
 
-        pdb_output_dict[df_logits.name] = {
-            "sequences": fasta_dict,
-            "logits": df_logits,
-            "logprobs": df_logits_to_logprobs(df_logits),
-        }
+            pdb_output_dict[df_logits.name] = {
+                "sequences": fasta_dict,
+                "logits": df_logits,
+                "logprobs": df_logits_to_logprobs(df_logits),
+            }
 
-        # Write to file
-        if save_flag:
-            write_fasta_to_dir(fasta_dict, df_logits, out_dir=out_dir)
+            # Write to file
+            if save_flag:
+                write_fasta_to_dir(fasta_dict, df_logits, out_dir=out_dir)
 
-    return pdb_output_dict
+        return pdb_output_dict
 
 
 def check_valid_input(args):
@@ -251,9 +240,7 @@ def check_valid_input(args):
         for i, _pdb in enumerate(df["pdb"].values):
             pdb_path = f"{args.pdb_dir}/{_pdb}.pdb"
             if not os.path.exists(pdb_path):
-                log.warning(
-                    f"WARNING missing PDBs ({missing+1}), PDB does not exist: {pdb_path}"
-                )
+                log.warning(f"WARNING: PDB ({missing+1}) does not exist: {pdb_path}")
                 missing += 1
 
         if missing >= 1:
@@ -278,10 +265,11 @@ def main(args):
 
     # Try reading in regions
     regions_to_mutate = []
-    for region in args.regions:
+    for region in args.regions.split(" "):
+        # Either interpret as positions (ints)
         try:
-            positions = list(map(int, region.split(",")))
-            regions_to_mutate.append(positions)
+            regions_to_mutate.append(int(region))
+        # Or as regions (strings)
         except ValueError:
             regions_to_mutate.append(region)
 
@@ -289,9 +277,17 @@ def main(args):
     if args.pdb_file:
         _pdb = os.path.splitext(os.path.basename(args.pdb_file))[0]
         pdbs_csv = pd.DataFrame(
-            {"pdb": _pdb, "Hchain": args.heavy_chain, "Lchain": args.light_chain},
+            {
+                "pdb": _pdb,
+                "Hchain": args.heavy_chain,
+                "Lchain": args.light_chain,
+            },
             index=[0],
         )
+
+        if args.antigen_chain:
+            pdbs_csv.loc[0, "Agchain"] = args.antigen_chain
+            
         pdb_dir = os.path.dirname(args.pdb_file)
 
     # Option 2: CSV + PDB dir

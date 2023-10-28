@@ -129,13 +129,12 @@ def get_dataset_pdb_name_res_posins_chains(dataset, idx):
     pdb_res = [aa for aa in seq if aa != "-"]
 
     # Position + insertion codes - gaps
-    posins = dataset[idx][4]
-    pdb_posins = [p for p in posins if p != "nan"]
+    posinschain = dataset[idx][4]
+    posinschain = [p for p in posinschain if p != "nan"]
 
-    # PDB chains (Always H + L), can infer L idxs from L length
-    pdb_chains = np.array([pdb_info["Hchain"]] * len(pdb_posins))
-    L_length = len(posins) - np.where(np.array(posins) == "nan")[0].max()
-    pdb_chains[-L_length:] = pdb_info["Lchain"]
+    # Extract position + insertion code + chain (1-letter)
+    pdb_posins = [p[:-1] for p in posinschain]
+    pdb_chains = [p[-1] for p in posinschain]
 
     return pdb_name, pdb_res, pdb_posins, pdb_chains
 
@@ -151,7 +150,7 @@ def logits_to_seqprobs_list(logits, tokens):
 
     # Check that only 10x gap ("-") per sequence!
     batch_size = logits.shape[0]
-    assert (mask_gap == False).sum() == batch_size * 10
+    # assert (mask_gap == False).sum() == batch_size * 10
 
     # Filter out gap (-) and padding (<pad>) positions, only keep 21x amino-acid probs (4:24) + "X"
     seqprobs_list = [logits[i, 4:25, mask_combined[i]] for i in range(len(logits))]
@@ -168,9 +167,7 @@ def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size, num_threa
         num_threads = min(num_threads, 4)
 
     # Load PDB coordinates
-    dataset = InverseData(
-        gaussian_noise_flag=False,
-    )
+    dataset = InverseData(gaussian_noise_flag=False,)
     dataset.populate(pdbs_csv_or_dataframe, pdb_dir)
 
     # Prepare torch dataloader at specified batch size
@@ -217,7 +214,7 @@ def dataset_dataloader_to_predictions_list(model, dataset, dataloader, batch_siz
             padding_mask,
             loss_masks,
             res_pos,
-            posins_list,
+            posinschain_list,
             targets,
         ) = batch
 
@@ -269,10 +266,7 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
 
         # Logits to DataFrame
         alphabet = antifold.esm.data.Alphabet.from_architecture("invariant_gvp")
-        df_logits = pd.DataFrame(
-            data=seq_probs,
-            columns=alphabet.all_toks[4:25],
-        )
+        df_logits = pd.DataFrame(data=seq_probs, columns=alphabet.all_toks[4:25],)
 
         # Limit to 20x amino-acids probs
         _alphabet = list("ACDEFGHIKLMNPQRSTVWY")

@@ -15,10 +15,9 @@ import torch
 from torch.utils.data import DataLoader
 
 import antifold.esm
-from antifold.esm_multichain_util_custom import (
-    concatenate_coords_HL,
-    load_complex_coords,
-)
+from antifold.esm_multichain_util_custom import (concatenate_coords_any,
+                                                 concatenate_coords_HL,
+                                                 load_complex_coords)
 from antifold.esm_util_custom import CoordBatchConverter_mask
 
 
@@ -58,16 +57,16 @@ class InverseData(torch.utils.data.Dataset):
         """
 
         # coords, seq = esm.inverse_folding.util.load_coords(fpath=pdb_path, chain=chain)
-        coords_dict, seq_dict, pos_dict, posins_dict = load_complex_coords(
+        coords_dict, seq_dict, pos_dict, posinschain_dict = load_complex_coords(
             pdb_path, [Hchain, Lchain]
         )
         (
             coords_concatenated,
             seq_concatenated,
             pos_concatenated,
-            posins_concatenated,
+            posinschain_concatenated,
         ) = concatenate_coords_HL(
-            coords_dict, seq_dict, pos_dict, posins_dict, heavy_chain_id=Hchain
+            coords_dict, seq_dict, pos_dict, posinschain_dict, heavy_chain_id=Hchain
         )
 
         # Limit to IMGT VH/VL regions (pos 1-128)
@@ -76,7 +75,51 @@ class InverseData(torch.utils.data.Dataset):
             coords_concatenated,
             seq_concatenated,
             pos_concatenated,
-            posins_concatenated,
+            posinschain_concatenated,
+        )
+
+    def load_coords_any(
+        self,
+        pdb_path: str,
+        chains: list,
+    ) -> Tuple[np.array, str, np.array]:
+        """Read pdb file and extract coordinates of backbone (N, CA, C) atoms of given chains
+        Args:
+            file path: path to pdb file
+            chains: List of chains ids to extract
+        Returns:
+            coords_concatenated: 3d backbone coordinates of extracted structure w/ padding - padded coords set to inf
+            seq_concatenated: AA sequence w/ padding
+            pos_concatenated: residue positions w/ padding
+        """
+
+        # Get all chains
+        coords_dict, seq_dict, pos_dict, posinschain_dict = load_complex_coords(
+            pdb_path,
+            chains,
+        )
+
+        # Concatenate
+        (
+            coords_concatenated,
+            seq_concatenated,
+            pos_concatenated,
+            posinschain_concatenated,
+        ) = concatenate_coords_any(
+            coords_dict,
+            seq_dict,
+            pos_dict,
+            posinschain_dict,
+            chains,
+        )
+
+        # Limit to IMGT VH/VL regions (pos 1-128)
+
+        return (
+            coords_concatenated,
+            seq_concatenated,
+            pos_concatenated,
+            posinschain_concatenated,
         )
 
     def add_gaussian_noise(self, coords: np.array, scale=0.1):
@@ -120,7 +163,7 @@ class InverseData(torch.utils.data.Dataset):
             log.error(f"CSV file {pdbs_csv_or_dataframe} must contain at least 1 PDB")
             sys.exit(1)
 
-        if not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() == 3:
+        if not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() >= 3:
             log.error(
                 f"CSV file requires columns 'pdb, Hchain, Lchain': found {df.columns}"
             )
@@ -154,10 +197,22 @@ class InverseData(torch.utils.data.Dataset):
         pdb_info = self.pdb_info_dict[pdb_path]
         _pdb = pdb_info["pdb"] + "_" + pdb_info["Hchain"] + pdb_info["Lchain"]
 
-        coords, seq_pdb, pos_pdb, pos_pdb_arr_str = self.load_coords_HL(
-            pdb_path, pdb_info["Hchain"], pdb_info["Lchain"]
-        )
+        if "Agchain" in pdb_info:
+            chains = []
+            for c in [pdb_info["Hchain"], pdb_info["Lchain"], pdb_info["Agchain"]]:
+                if c:
+                    chains.append(c)
+            print(f"WARNING EXPERIMENTAL: Loading custom chains {chains}")
 
+            coords, seq_pdb, pos_pdb, pos_pdb_arr_str = self.load_coords_any(
+                pdb_path, chains
+            )
+        else:
+            coords, seq_pdb, pos_pdb, pos_pdb_arr_str = self.load_coords_HL(
+                pdb_path, pdb_info["Hchain"], pdb_info["Lchain"]
+            )
+
+        '''
         if self.verbose >= 2:
             print(
                 f"""
@@ -168,10 +223,10 @@ class InverseData(torch.utils.data.Dataset):
             from {pdb_path} (Hchain {pdb_info['Hchain']}, Lchain {pdb_info['Lchain']})
             """
             )
+        '''
 
-        # If no CSV provided, fill in empty (un-used) targets shape of PDB
-        else:
-            targets = np.full(len(pos_pdb_arr_str), np.nan)
+        # Not used, included for legacy reasons
+        targets = np.full(len(pos_pdb_arr_str), np.nan)
 
         # Add (0.1 Å) gaussian noise to Ca, C, N co-ordinates
         if self.gaussian_noise_flag:
