@@ -15,9 +15,11 @@ import torch
 from torch.utils.data import DataLoader
 
 import antifold.esm
-from antifold.esm_multichain_util_custom import (concatenate_coords_any,
-                                                 concatenate_coords_HL,
-                                                 load_complex_coords)
+from antifold.esm_multichain_util_custom import (
+    concatenate_coords_any,
+    concatenate_coords_HL,
+    load_complex_coords,
+)
 from antifold.esm_util_custom import CoordBatchConverter_mask
 
 

@@ -37,7 +37,7 @@ python antifold/main.py \
     --heavy_chain H \
     --light_chain L \
     --sampling_temp 0.2 \
-    --regions CDRH3
+    --regions "CDRH3"
 
 # Run on example pdbs, all CDRs
 python antifold/main.py \
@@ -45,32 +45,33 @@ python antifold/main.py \
     --pdbs_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
     --sampling_temp 0.2 \
-    --regions CDR1 CDR2 CDR3
+    --regions "CDR1 CDR2 CDR3"
 ```
 
 ## Example output
 Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a>
 ```csv
 pdb_pos,pdb_chain,aa_orig,aa_pred,pdb_posins,perplexity,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y
-2,H,V,M,2,1.7221,-4.9226,-6.4708,-6.1467,-6.1754,-6.5648,-4.2163,-6.5528,-5.1208,-6.6035,-5.7443,-0.0992,-6.2694,-4.8115,-6.4361,-6.1866,-4.9160,-4.9723,-3.7213,-7.9959,-7.1096
-3,H,Q,Q,3,1.8164,-9.5358,-12.3109,-8.1272,-4.2464,-12.4795,-10.1501,-5.2837,-10.4261,-2.0793,-7.4281,-8.6754,-5.7362,-12.2200,-0.1787,-4.4097,-9.2673,-6.3677,-7.0966,-13.2125,-11.0414
-4,H,L,L,4,1.0017,-13.7056,-12.7263,-17.5119,-12.3137,-10.0561,-13.7474,-14.7022,-14.1318,-16.2906,-0.0001,-9.5772,-16.8369,-14.1303,-12.3832,-15.3246,-16.9911,-17.1241,-10.8850,-13.3156,-13.4724
+2,H,V,M,2,1.6488,-4.9963,-6.6117,-6.3181,-6.3243,-6.7570,-4.2518,-6.7514,-5.2540,-6.8067,-5.8619,-0.0904,-6.5493,-4.8639,-6.6316,-6.3084,-5.1900,-5.0988,-3.7295,-8.0480,-7.3236
+3,H,Q,Q,3,1.3889,-10.5258,-12.8463,-8.4800,-4.7630,-12.9094,-11.0924,-5.6136,-10.9870,-3.1119,-8.1113,-9.4382,-6.2246,-13.3660,-0.0701,-4.9957,-10.0301,-6.8618,-7.5810,-13.6721,-11.4157
+4,H,L,L,4,1.0021,-13.3581,-12.6206,-17.5484,-12.4801,-9.8792,-13.6382,-14.8609,-13.9344,-16.4080,-0.0002,-9.2727,-16.6532,-14.0476,-12.5943,-15.4559,-16.9103,-17.0809,-10.5670,-13.5334,-13.4324
 ```
 
 Output FASTA file with sampled sequences: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.fasta">6y1l_imgt.fasta</a>
 - Score: average log-odds of residues in the sampled region
 - Global: average log-odds of all residues (IMGT positions 1-128)
 ```fasta
->6y1l_imgt , score=0.3504, global_score=0.3504, regions=['CDR1', 'CDR2', 'CDR3H'], model_name=AntiFold, seed=42
+>6y1l_imgt , score=0.2934, global_score=0.2934, regions=['CDR1', 'CDR2', 'CDRH3'], model_name=AntiFold, seed=42
 VQLQESGPGLVKPSETLSLTCAVSGYSISSGYYWGWIRQPPGKGLEWIGSIYHSGSTYYN
 PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLTQSSHNDANWGQGTLVTVSS/V
 LTQPPSVSAAPGQKVTISCSGSSSNIGNNYVSWYQQLPGTAPKRLIYDNNKRPSGIPDRF
 SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
-> T=0.50, sample=1, score=0.5675, global_score=0.2636, seq_recovery=0.8898, mutations=13
-VQLQESGPGLVKPSETLSLTCAVSGASITSSYYWGWIRQPPGKGLEWIGSIYYSGTTYYN
-PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLYGSPYSTPAWGQGTLVTVSS/V
+> T=0.20, sample=1, score=0.3930, global_score=0.1869, seq_recovery=0.8983, mutations=12
+VQLQESGPGLVKPSETLSLTCAVSGASITSSYYWGWIRQPPGKGLEWIGSIYYSGSTYYN
+PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLYGSPWSNPYWGQGTLVTVSS/V
 LTQPPSVSAAPGQKVTISCSGSSSNIGNNYVSWYQQLPGTAPKRLIYDNNKRPSGIPDRF
 SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
+...
 ```
 ## Example notebook
 Notebook: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">colab.ipynb</a>
