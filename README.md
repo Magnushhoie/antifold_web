@@ -1,9 +1,10 @@
-antifold_web
+AntiFold
 ==============================
 
-Code for AntiFold paper, submitted for NeurIPS 2023.
+Code for AntiFold paper, accepted for [NeurIPS 2023 GenBio spotlight](https://openreview.net/forum?id=bxZMKHtlL6).
 
-Code: [antifold.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip)
+Code (Linux): [antifold.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip)
+Code (MacOS): [antifold_macos.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_macos.zip))
 Model: [model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt)
 
 ## Quickstart guide
@@ -11,7 +12,7 @@ Model: [model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/mod
 See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">Google Colab</a> or follow quickstart guide with example PDBs:
 
 ```bash
-# Download AntiFold code and model
+# Download AntiFold model and code (Linux)
 mkdir -p antifold/models && cd antifold
 wget https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip
 wget -P models/ https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt
