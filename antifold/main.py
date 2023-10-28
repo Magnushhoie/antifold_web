@@ -27,14 +27,25 @@ log = logging.getLogger(__name__)
 def cmdline_args():
     # Make parser object
     usage = f"""
-    # Predict on example PDBs in folder
-    python antifold/main.py \
+# Run on single PDB, CDRH3 only
+python antifold/main.py \
+    --out_dir output/single_pdb \
+    --pdb_file data/pdbs/6y1l_imgt.pdb \
+    --heavy_chain H \
+    --light_chain L \
+    --sampling_temp "0.2" \
+    --regions "CDRH3"
+
+# Run on example pdbs, all CDRs, temperatures 0.20 and 0.30
+python antifold/main.py \
+    --out_dir output/example_pdbs \
     --pdbs_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
-    --out_dir output/
+    --sampling_temp "0.20 0.30" \
+    --regions "CDR1 CDR2 CDR3"
     """
     p = ArgumentParser(
-        description="Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained fold.\nRequires IMGT-numbered PDBs with paired heavy and light chains.",
+        description="Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained fold.\nPDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).\n\nFor IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/",
         formatter_class=RawTextHelpFormatter,
         usage=usage,
     )
@@ -58,11 +69,13 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--heavy_chain", help="Ab heavy chain (for single PDB predictions)",
+        "--heavy_chain",
+        help="Ab heavy chain (for single PDB predictions)",
     )
 
     p.add_argument(
-        "--light_chain", help="Ab light chain (for single PDB predictions)",
+        "--light_chain",
+        help="Ab light chain (for single PDB predictions)",
     )
 
     p.add_argument(
@@ -83,13 +96,15 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--out_dir", default="output", help="Output directory",
+        "--out_dir",
+        default="output",
+        help="Output directory",
     )
 
     p.add_argument(
         "--regions",
         default="CDR1 CDR2 CDR3",
-        help="Space-separated regions to mutate (e.g., CDR1 CDR2 CDR3H).",
+        help="Space-separated regions to mutate. Default 'CDR1 CDR2 CDR3H'",
     )
 
     p.add_argument(
@@ -101,10 +116,8 @@ def cmdline_args():
 
     p.add_argument(
         "--sampling_temp",
-        default=[0.2],
-        type=float,
-        nargs="+",
-        help="A string of temperatures, 0.2 0.25 0.5. Sampling temperature for amino acids. Suggested values 0.1, 0.15, 0.2, 0.25, 0.3. Higher values will lead to more diversity.",
+        default="0.20",
+        help="A string of temperatures e.g. '0.20 0.25 0.50' (default 0.20). Sampling temperature for amino acids. Suggested values 0.10, 0.15, 0.20, 0.25, 0.30. Higher values will lead to more diversity.",
     )
 
     p.add_argument(
@@ -122,7 +135,10 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--batch_size", default=1, type=int, help="Batch-size to use",
+        "--batch_size",
+        default=1,
+        type=int,
+        help="Batch-size to use",
     )
 
     p.add_argument(
@@ -133,15 +149,23 @@ def cmdline_args():
     )
 
     p.add_argument(
-        "--seed", default=42, type=int, help="Seed for reproducibility",
+        "--seed",
+        default=42,
+        type=int,
+        help="Seed for reproducibility",
     )
 
     p.add_argument(
-        "--model_path", default="models/model.pt", help="Output directory",
+        "--model_path",
+        default="models/model.pt",
+        help="AntiFold model weights. Set to ESM-IF1 to use ESM-IF1 model instead of AntiFold fine-tuned model",
     )
 
     p.add_argument(
-        "--verbose", default=1, type=int, help="Verbose printing",
+        "--verbose",
+        default=1,
+        type=int,
+        help="Verbose printing",
     )
 
     return p.parse_args()
@@ -273,6 +297,14 @@ def main(args):
         except ValueError:
             regions_to_mutate.append(region)
 
+    # Try reading in sampling temperatures
+    try:
+        args.sampling_temp = [float(t) for t in args.sampling_temp.split(" ")]
+    except ValueError:
+        raise Exception(
+            "Sampling temperature must be a float or space-separated floats, e.g. '0.20 0.25 0.50'"
+        )
+
     # Option 1: Single PDB
     if args.pdb_file:
         _pdb = os.path.splitext(os.path.basename(args.pdb_file))[0]
@@ -287,7 +319,7 @@ def main(args):
 
         if args.antigen_chain:
             pdbs_csv.loc[0, "Agchain"] = args.antigen_chain
-            
+
         pdb_dir = os.path.dirname(args.pdb_file)
 
     # Option 2: CSV + PDB dir
