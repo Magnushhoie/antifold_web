@@ -3,12 +3,16 @@ AntiFold
 
 Code for AntiFold paper, accepted for [NeurIPS 2023 GenBio spotlight](https://openreview.net/forum?id=bxZMKHtlL6)
 
+Webserver: [OPIG webserver](https://opig.stats.ox.ac.uk/webapps/AntiFold/)
 Code: [antifold_code.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip)
 Model: [model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt)
 
+# Colab
+To test the method out without installing it you can try this: [![Open In Colab](images/colab-badge.svg)](https://colab.research.google.com/drive/1TTfgjoZx3mzF5u4e9b4Un9Y7b_rqXc_4)
+
 ## Quickstart guide
 
-See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">Google Colab</a> or follow quickstart guide with example PDBs:
+See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">Jupyter notebook</a> or follow quickstart guide with example PDBs:
 
 ```bash
 # Download AntiFold model and code (Linux)
@@ -75,7 +79,7 @@ SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
 ...
 ```
 ## Example notebook
-Notebook: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">colab.ipynb</a>
+Notebook: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">notebook.ipynb</a>
 
 ```python
 import pandas as pd

@@ -9,10 +9,13 @@
           <div id='content'>
       <h1 id="antifold">AntiFold</h1>
 <p>Code for AntiFold paper, accepted for <a href="https://openreview.net/forum?id=bxZMKHtlL6">NeurIPS 2023 GenBio spotlight</a></p>
-<p>Code: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip">antifold_code.zip</a><br />
+<p>Webserver: <a href="https://opig.stats.ox.ac.uk/webapps/AntiFold/">OPIG webserver</a><br />
+Code: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip">antifold_code.zip</a><br />
 Model: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt">model.pt</a></p>
+<h1 id="colab">Colab</h1>
+<p>To test the method out without installing it you can try this: <a href="https://colab.research.google.com/drive/1TTfgjoZx3mzF5u4e9b4Un9Y7b_rqXc_4"><img src="images/colab-badge.svg" alt="Open In Colab" /></a></p>
 <h2 id="quickstart-guide">Quickstart guide</h2>
-<p>See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">Google Colab</a> or follow quickstart guide with example PDBs:</p>
+<p>See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">Jupyter notebook</a> or follow quickstart guide with example PDBs:</p>
 <pre><code class="hljs bash language-bash"><span class="hljs-comment"># Download AntiFold model and code (Linux)</span>
 <span class="hljs-built_in">mkdir</span> -p antifold/models &amp;&amp; <span class="hljs-built_in">cd</span> antifold
 wget https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip
@@ -73,7 +76,7 @@ SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
 <span class="hljs-built_in">..</span>.
 </code></pre>
 <h2 id="example-notebook">Example notebook</h2>
-<p>Notebook: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">colab.ipynb</a></p>
+<p>Notebook: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">notebook.ipynb</a></p>
 <pre><code class="hljs python language-python"><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd
 
 <span class="hljs-comment"># Put IMGT numbered PDBs (Fv only, IMGT position 1-128) to process and load a CSV file with PDB names and heavy/light chains</span>
