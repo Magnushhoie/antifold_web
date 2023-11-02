@@ -50,6 +50,18 @@ python antifold/main.py \
     --pdb_dir data/pdbs \
     --sampling_temp "0.20 0.30" \
     --regions "CDR1 CDR2 CDR3"
+
+# Extract (ESM-IF1) embeddings with custom chains
+python antifold/main.py \
+    --out_dir output/untested/ \
+    --pdbs_csv data/untested.csv \
+    --pdb_dir data/untested/ \
+    --model_path "ESM-IF1" \
+    --custom_chain_mode \
+    --extract_embeddings \
+    --sampling_temp "0" \
+    --num_seq_per_target "0" \
+    --regions "all"
 ```
 
 ## Example output
@@ -123,36 +135,40 @@ usage:
     # Predict on example PDBs in folder
     python antifold/main.py     --pdbs_csv data/example_pdbs.csv     --pdb_dir data/pdbs     --out_dir output/
     
-
 Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained fold.
-Requires IMGT-numbered PDBs with paired heavy and light chains.
+PDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).
 
-optional arguments:
+For IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/
+
+options:
   -h, --help            show this help message and exit
   --pdb_file PDB_FILE   Input PDB file (for single PDB predictions)
   --heavy_chain HEAVY_CHAIN
                         Ab heavy chain (for single PDB predictions)
   --light_chain LIGHT_CHAIN
                         Ab light chain (for single PDB predictions)
+  --antigen_chain ANTIGEN_CHAIN
+                        Antigen chain (experimental)
   --pdbs_csv PDBS_CSV   Input CSV file with PDB names and H/L chains (multi-PDB predictions)
   --pdb_dir PDB_DIR     Directory with input PDB files (multi-PDB predictions)
   --out_dir OUT_DIR     Output directory
-  --regions REGIONS [REGIONS ...]
-                        Space-separated list of regions to mutate (e.g., CDR1 CDR2 CDR3H).
+  --regions REGIONS     Space-separated regions to mutate. Default 'CDR1 CDR2 CDR3H'
   --num_seq_per_target NUM_SEQ_PER_TARGET
                         Number of sequences to sample from each antibody PDB
-  --sampling_temp SAMPLING_TEMP [SAMPLING_TEMP ...]
-                        A string of temperatures e.g. 0.2 0.25 0.5. Sampling temperature for amino acids. Suggested values 0.1, 0.15, 0.2, 0.25, 0.3. Higher values will lead to more diversity.
+  --sampling_temp SAMPLING_TEMP
+                        A string of temperatures e.g. '0.20 0.25 0.50' (default 0.20). Sampling temperature for amino acids. Suggested values 0.10, 0.15, 0.20, 0.25, 0.30. Higher values will lead to more diversity.
   --limit_variation     Limit variation to as many mutations as expected from temperature sampling
+  --extract_embeddings  Extract per-residue embeddings from AntiFold / ESM-IF1
+  --custom_chain_mode   Custom chain input (experimental, e.g. single chain, inclusion of antigen chain or any chains with ESM-IF1)
   --exclude_heavy       Exclude heavy chain from sampling
   --exclude_light       Exclude light chain from sampling
   --batch_size BATCH_SIZE
                         Batch-size to use
   --num_threads NUM_THREADS
-                        Number of CPU threads to use for parallel processing (default 0 = all available)
+                        Number of CPU threads to use for parallel processing (0 = all available)
   --seed SEED           Seed for reproducibility
   --model_path MODEL_PATH
-                        Output directory
+                        AntiFold model weights. Set to 'ESM-IF1' to use ESM-IF1 model instead of AntiFold fine-tuned model
   --verbose VERBOSE     Verbose printing
 ```
 

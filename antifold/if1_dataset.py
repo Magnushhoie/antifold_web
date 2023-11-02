@@ -12,15 +12,10 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader
 
-import antifold.esm
-from antifold.esm_multichain_util_custom import (
-    concatenate_coords_any,
-    concatenate_coords_HL,
-    load_complex_coords,
-)
-from antifold.esm_util_custom import CoordBatchConverter_mask
+from antifold.esm_multichain_util_custom import (concatenate_coords_any,
+                                                 concatenate_coords_HL,
+                                                 load_complex_coords)
 
 
 class InverseData(torch.utils.data.Dataset):
@@ -36,13 +31,18 @@ class InverseData(torch.utils.data.Dataset):
         loss_mask_flag: bool = False,
         gaussian_noise_flag: bool = True,
         gaussian_scale_A: float = 0.1,
+        custom_chain_mode: bool = False,
     ):
         # Variables
         self.loss_mask_flag = loss_mask_flag
         self.gaussian_noise_flag = gaussian_noise_flag
         self.gaussian_scale_A = gaussian_scale_A
         self.seq_pdb_fasta_mismatches = 0
+        self.custom_chain_mode = custom_chain_mode
         self.verbose = verbose
+
+        if self.custom_chain_mode:
+            log.info("WARNING: Custom chain mode enabled")
 
     def load_coords_HL(
         self, pdb_path: str, Hchain: str, Lchain: str
@@ -165,7 +165,10 @@ class InverseData(torch.utils.data.Dataset):
             log.error(f"CSV file {pdbs_csv_or_dataframe} must contain at least 1 PDB")
             sys.exit(1)
 
-        if not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() >= 3:
+        if (
+            not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() >= 3
+            and not self.custom_chain_mode
+        ):
             log.error(
                 f"CSV file requires columns 'pdb, Hchain, Lchain': found {df.columns}"
             )
@@ -183,49 +186,46 @@ class InverseData(torch.utils.data.Dataset):
         # PDB paths
         self.pdb_paths = pdb_path_list
 
-        # PDB info dict
+        # PDB info dict: pdb_path, base pdb, Hchain, Lchain
         df.index = pdb_path_list
-        df["pdb_path"] = pdb_path_list
+        df.insert(0, "pdb_path", pdb_path_list)
         pdb_info_dict = df.to_dict("index")
         self.pdb_info_dict = pdb_info_dict
 
+        # CSV info dict: chain order and pdb name with chains
+        self.csv_info_dict = {}
+        chain_order = df.columns[2:]
+        for pdb_path in pdb_path_list:
+            pdb_info = self.pdb_info_dict[pdb_path]
+            chains = [pdb_info[c] for c in chain_order if not pd.isna(pdb_info[c])]
+            _pdb_chains = pdb_info["pdb"] + "_" + "".join(chains)
+
+            self.csv_info_dict[pdb_path] = {"chain_order": chains, "pdb": _pdb_chains}
+
     def __getitem__(self, idx: int):
         """
+        # obtain pdb_info for entry with index idx - pdb_info contains the pdb_path (generated in populate)
         Format data to pass to PyTorch DataLoader (with collate_fn = util.CoordBatchConverter)
         """
 
-        # obtain pdb_info for entry with index idx - pdb_info contains the pdb_path (generated in populate)
-        pdb_path = self.pdb_paths[idx]
-        pdb_info = self.pdb_info_dict[pdb_path]
-        _pdb = pdb_info["pdb"] + "_" + pdb_info["Hchain"] + pdb_info["Lchain"]
-
-        if "Agchain" in pdb_info:
-            chains = []
-            for c in [pdb_info["Hchain"], pdb_info["Lchain"], pdb_info["Agchain"]]:
-                if c:
-                    chains.append(c)
-            print(f"WARNING EXPERIMENTAL: Loading custom chains {chains}")
+        # Experimental - use any chains (e.g. only Heavy, or any chains with ESM-IF1)
+        if self.custom_chain_mode:
+            pdb_path = self.pdb_paths[idx]
+            pdb_info = self.pdb_info_dict[pdb_path]
+            chains = self.csv_info_dict[pdb_path]["chain_order"]
 
             coords, seq_pdb, pos_pdb, pos_pdb_arr_str = self.load_coords_any(
                 pdb_path, chains
             )
+
+        # Regular mode
         else:
+            pdb_path = self.pdb_paths[idx]
+            pdb_info = self.pdb_info_dict[pdb_path]
+
             coords, seq_pdb, pos_pdb, pos_pdb_arr_str = self.load_coords_HL(
                 pdb_path, pdb_info["Hchain"], pdb_info["Lchain"]
             )
-
-        '''
-        if self.verbose >= 2:
-            print(
-                f"""
-            Loaded coords for {_pdb}, shape {coords.shape}
-            seq_pdb len {len(seq_pdb)},
-            pos_pdb {pos_pdb.shape},
-            pos_pdb_arr_str {pos_pdb_arr_str.shape}
-            from {pdb_path} (Hchain {pdb_info['Hchain']}, Lchain {pdb_info['Lchain']})
-            """
-            )
-        '''
 
         # Not used, included for legacy reasons
         targets = np.full(len(pos_pdb_arr_str), np.nan)

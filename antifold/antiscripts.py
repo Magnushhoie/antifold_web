@@ -123,8 +123,9 @@ def get_dataset_pdb_name_res_posins_chains(dataset, idx):
 
     # Get PDB sequence, position+insertion codes and chains from dataset
     pdb_path = dataset.pdb_paths[idx]
-    pdb_info = dataset.pdb_info_dict[pdb_path]
-    pdb_name = os.path.splitext(os.path.basename(pdb_info["pdb_path"]))[0]
+    # pdb_info = dataset.pdb_info_dict[pdb_path]
+    # pdb_name = os.path.splitext(os.path.basename(pdb_info["pdb_path"]))[0]
+    pdb_name = dataset.csv_info_dict[pdb_path]["pdb"]
 
     # Sequence - gaps
     seq = dataset[idx][2]
@@ -151,7 +152,7 @@ def logits_to_seqprobs_list(logits, tokens):
     mask_combined = mask_gap & mask_pad
 
     # Check that only 10x gap ("-") per sequence!
-    batch_size = logits.shape[0]
+    # batch_size = logits.shape[0]
     # assert (mask_gap == False).sum() == batch_size * 10
 
     # Filter out gap (-) and padding (<pad>) positions, only keep 21x amino-acid probs (4:24) + "X"
@@ -160,7 +161,9 @@ def logits_to_seqprobs_list(logits, tokens):
     return seqprobs_list
 
 
-def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size, num_threads=0):
+def get_dataset_dataloader(
+    pdbs_csv_or_dataframe, pdb_dir, batch_size, custom_chain_mode=False, num_threads=0
+):
     """Prepares dataset/dataoader from CSV file containing PDB paths and H/L chains"""
 
     # Set number of threads & workers
@@ -171,6 +174,7 @@ def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size, num_threa
     # Load PDB coordinates
     dataset = InverseData(
         gaussian_noise_flag=False,
+        custom_chain_mode=custom_chain_mode,
     )
     dataset.populate(pdbs_csv_or_dataframe, pdb_dir)
 
@@ -187,7 +191,9 @@ def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size, num_threa
     return dataset, dataloader
 
 
-def dataset_dataloader_to_predictions_list(model, dataset, dataloader, batch_size=1):
+def dataset_dataloader_to_predictions_list(
+    model, dataset, dataloader, batch_size=1, extract_embeddings=False
+):
     """Get PDB predictions from a dataloader"""
 
     # Check that dataloader and dataset match, and no random shuffling
@@ -200,6 +206,7 @@ def dataset_dataloader_to_predictions_list(model, dataset, dataloader, batch_siz
 
     # Get all batch predictions
     all_seqprobs_list = []
+    all_embeddings_list = []
     for bi, batch in enumerate(dataloader):
         start_index = bi * batch_size
         end_index = min(
@@ -240,7 +247,24 @@ def dataset_dataloader_to_predictions_list(model, dataset, dataloader, batch_siz
             L = logits_to_seqprobs_list(logits, tokens)
             all_seqprobs_list.extend(L)
 
-    return all_seqprobs_list
+            if extract_embeddings:
+                # Extract embeddings from batch
+                padding_mask = padding_mask.detach().cpu().numpy()  # bs x len
+                Es = extra["inner_states"][0].detach().cpu().numpy()  # len x bs x 512
+                # L[0] = encoder output
+                # L[1] = decoder input
+                # L[2] = decoder output layer 1
+                # L[3] = decoder output layer 2 ...
+                Es = np.transpose(Es, (1, 0, 2))  # bs x len x 512
+
+                # Embeddings without padding and bos/eos
+                for e, pad in zip(Es, padding_mask):
+                    # e: len x 512
+                    e = e[~pad]  # (len - pad) x 512
+                    e = e[1:-1]  # seq_len x 512
+                    all_embeddings_list.append(e)  # seq_len x 512
+
+    return all_seqprobs_list, all_embeddings_list
 
 
 def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
@@ -296,7 +320,7 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
         # Skip if not IMGT numbered - 10 never found in H-chain IMGT numbered PDBs
         Hchain = pdb_chains[0]
         Hpos = positions[pdb_chains == Hchain]
-        if 10 in Hpos:
+        if 10 in Hpos and not dataset.custom_chain_mode:
             log.error(
                 f"WARNING: PDB {pdb_name} seems to not be IMGT numbered! Output probabilities may be affected. See https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/"
             )
@@ -309,18 +333,26 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
     return all_df_logits_list
 
 
-def df_logits_list_to_logprob_csvs(df_logits_list, out_dir, float_format="%.4f"):
+def df_logits_list_to_logprob_csvs(
+    df_logits_list, out_dir, embeddings_list=False, float_format="%.4f"
+):
     """Save df_logits_list to CSVs"""
     os.makedirs(out_dir, exist_ok=True)
     log.info(f"Saving {len(df_logits_list)} log-prob CSVs to {out_dir}")
 
-    for df in df_logits_list:
+    for i, df in enumerate(df_logits_list):
         # Convert to log-probs
         df_out = df_logits_to_logprobs(df)
         # Save
         outpath = f"{out_dir}/{df.name}.csv"
         log.info(f"Writing {df.name} log_probs CSV to {outpath}")
         df_out.to_csv(outpath, float_format=float_format, index=False)
+
+        if embeddings_list:
+            # Save embeddingsl
+            outpath = f"{out_dir}/{df.name}.npy"
+            log.info(f"Writing {df.name} per-residue embeddings to {outpath}")
+            np.save(outpath, embeddings_list[i])
 
 
 def seed_everything(seed: int):
@@ -346,6 +378,8 @@ def get_pdbs_logits(
     pdb_dir,
     out_dir=False,
     batch_size=1,
+    extract_embeddings=False,
+    custom_chain_mode=False,
     num_threads=0,
     save_flag=True,
     float_format="%.4f",
@@ -360,12 +394,20 @@ def get_pdbs_logits(
 
     # Load PDBs
     dataset, dataloader = get_dataset_dataloader(
-        pdbs_csv_or_dataframe, pdb_dir, batch_size=batch_size, num_threads=num_threads
+        pdbs_csv_or_dataframe,
+        pdb_dir,
+        batch_size=batch_size,
+        custom_chain_mode=custom_chain_mode,
+        num_threads=num_threads,
     )
 
     # Predict PDBs -> df_logits
-    predictions_list = dataset_dataloader_to_predictions_list(
-        model, dataset, dataloader, batch_size=batch_size
+    predictions_list, embeddings_list = dataset_dataloader_to_predictions_list(
+        model,
+        dataset,
+        dataloader,
+        batch_size=batch_size,
+        extract_embeddings=extract_embeddings,
     )
     df_logits_list = predictions_list_to_df_logits_list(
         predictions_list, dataset, dataloader
@@ -374,10 +416,16 @@ def get_pdbs_logits(
     # Save df_logits to CSVs
     if save_flag:
         df_logits_list_to_logprob_csvs(
-            df_logits_list, out_dir, float_format=float_format
+            df_logits_list,
+            out_dir,
+            embeddings_list=embeddings_list,
+            float_format=float_format,
         )
 
-    return df_logits_list
+    if extract_embeddings:
+        return df_logits_list, embeddings_list
+    else:
+        return df_logits_list
 
 
 def calc_pos_perplexity(df):

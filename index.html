@@ -49,6 +49,18 @@ python antifold/main.py \
     --pdb_dir data/pdbs \
     --sampling_temp <span class="hljs-string">&quot;0.20 0.30&quot;</span> \
     --regions <span class="hljs-string">&quot;CDR1 CDR2 CDR3&quot;</span>
+
+<span class="hljs-comment"># Extract (ESM-IF1) embeddings with custom chains</span>
+python antifold/main.py \
+    --out_dir output/untested/ \
+    --pdbs_csv data/untested.csv \
+    --pdb_dir data/untested/ \
+    --model_path <span class="hljs-string">&quot;ESM-IF1&quot;</span> \
+    --custom_chain_mode \
+    --extract_embeddings \
+    --sampling_temp <span class="hljs-string">&quot;0&quot;</span> \
+    --num_seq_per_target <span class="hljs-string">&quot;0&quot;</span> \
+    --regions <span class="hljs-string">&quot;all&quot;</span>
 </code></pre>
 <h2 id="example-output">Example output</h2>
 <p>Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a></p>
@@ -116,36 +128,40 @@ fasta_dict = pdb_output_dict[<span class="hljs-string">&quot;6y1l_imgt&quot;</sp
     <span class="hljs-comment"># Predict on example PDBs in folder</span>
     python antifold/main.py     --pdbs_csv data/example_pdbs.csv     --pdb_dir data/pdbs     --out_dir output/
 
-
 Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained <span class="hljs-built_in">fold</span>.
-Requires IMGT-numbered PDBs with paired heavy and light chains.
+PDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).
 
-optional arguments:
+For IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/
+
+options:
   -h, --<span class="hljs-built_in">help</span>            show this <span class="hljs-built_in">help</span> message and <span class="hljs-built_in">exit</span>
   --pdb_file PDB_FILE   Input PDB file (<span class="hljs-keyword">for</span> single PDB predictions)
   --heavy_chain HEAVY_CHAIN
                         Ab heavy chain (<span class="hljs-keyword">for</span> single PDB predictions)
   --light_chain LIGHT_CHAIN
                         Ab light chain (<span class="hljs-keyword">for</span> single PDB predictions)
+  --antigen_chain ANTIGEN_CHAIN
+                        Antigen chain (experimental)
   --pdbs_csv PDBS_CSV   Input CSV file with PDB names and H/L chains (multi-PDB predictions)
   --pdb_dir PDB_DIR     Directory with input PDB files (multi-PDB predictions)
   --out_dir OUT_DIR     Output directory
-  --regions REGIONS [REGIONS ...]
-                        Space-separated list of regions to mutate (e.g., CDR1 CDR2 CDR3H).
+  --regions REGIONS     Space-separated regions to mutate. Default <span class="hljs-string">&#x27;CDR1 CDR2 CDR3H&#x27;</span>
   --num_seq_per_target NUM_SEQ_PER_TARGET
                         Number of sequences to sample from each antibody PDB
-  --sampling_temp SAMPLING_TEMP [SAMPLING_TEMP ...]
-                        A string of temperatures e.g. 0.2 0.25 0.5. Sampling temperature <span class="hljs-keyword">for</span> amino acids. Suggested values 0.1, 0.15, 0.2, 0.25, 0.3. Higher values will lead to more diversity.
+  --sampling_temp SAMPLING_TEMP
+                        A string of temperatures e.g. <span class="hljs-string">&#x27;0.20 0.25 0.50&#x27;</span> (default 0.20). Sampling temperature <span class="hljs-keyword">for</span> amino acids. Suggested values 0.10, 0.15, 0.20, 0.25, 0.30. Higher values will lead to more diversity.
   --limit_variation     Limit variation to as many mutations as expected from temperature sampling
+  --extract_embeddings  Extract per-residue embeddings from AntiFold / ESM-IF1
+  --custom_chain_mode   Custom chain input (experimental, e.g. single chain, inclusion of antigen chain or any chains with ESM-IF1)
   --exclude_heavy       Exclude heavy chain from sampling
   --exclude_light       Exclude light chain from sampling
   --batch_size BATCH_SIZE
                         Batch-size to use
   --num_threads NUM_THREADS
-                        Number of CPU threads to use <span class="hljs-keyword">for</span> parallel processing (default 0 = all available)
+                        Number of CPU threads to use <span class="hljs-keyword">for</span> parallel processing (0 = all available)
   --seed SEED           Seed <span class="hljs-keyword">for</span> reproducibility
   --model_path MODEL_PATH
-                        Output directory
+                        AntiFold model weights. Set to <span class="hljs-string">&#x27;ESM-IF1&#x27;</span> to use ESM-IF1 model instead of AntiFold fine-tuned model
   --verbose VERBOSE     Verbose printing
 </code></pre>
 <h2 id="imgt-regions-dict">IMGT regions dict</h2>

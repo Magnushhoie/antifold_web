@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-
 # import warnings
 from pathlib import Path
 
@@ -12,14 +11,9 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 import pandas as pd
 
-from antifold.antiscripts import (
-    df_logits_to_logprobs,
-    get_pdbs_logits,
-    load_IF1_model,
-    sample_from_df_logits,
-    visualize_mutations,
-    write_fasta_to_dir,
-)
+from antifold.antiscripts import (df_logits_to_logprobs, get_pdbs_logits,
+                                  load_IF1_model, sample_from_df_logits,
+                                  write_fasta_to_dir)
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +37,18 @@ python antifold/main.py \
     --pdb_dir data/pdbs \
     --sampling_temp "0.20 0.30" \
     --regions "CDR1 CDR2 CDR3"
+
+# Extract ESM-IF1 embeddings with custom chains
+python antifold/main.py \
+    --out_dir output/untested/ \
+    --pdbs_csv data/untested.csv \
+    --pdb_dir data/untested/ \
+    --model_path "ESM-IF1" \
+    --custom_chain_mode \
+    --extract_embeddings \
+    --sampling_temp "0" \
+    --num_seq_per_target "0" \
+    --regions "all"
     """
     p = ArgumentParser(
         description="Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained fold.\nPDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).\n\nFor IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/",
@@ -122,8 +128,23 @@ python antifold/main.py \
 
     p.add_argument(
         "--limit_variation",
+        default=False,
         action="store_true",
         help="Limit variation to as many mutations as expected from temperature sampling",
+    )
+
+    p.add_argument(
+        "--extract_embeddings",
+        default=False,
+        action="store_true",
+        help="Extract per-residue embeddings from AntiFold / ESM-IF1",
+    )
+
+    p.add_argument(
+        "--custom_chain_mode",
+        default=False,
+        action="store_true",
+        help="Custom chain input (experimental, e.g. single chain, inclusion of antigen chain or any chains with ESM-IF1)",
     )
 
     p.add_argument(
@@ -183,6 +204,8 @@ def sample_pdbs(
     exclude_heavy=False,
     exclude_light=False,
     batch_size=1,
+    extract_embeddings=False,
+    custom_chain_mode=False,
     num_threads=0,
     seed=42,
     save_flag=False,
@@ -195,6 +218,8 @@ def sample_pdbs(
         out_dir=out_dir,
         save_flag=save_flag,
         batch_size=1,
+        extract_embeddings=extract_embeddings,
+        custom_chain_mode=custom_chain_mode,
         seed=42,
         num_threads=num_threads,
     )
@@ -252,7 +277,10 @@ def check_valid_input(args):
     if args.pdb_dir and args.pdbs_csv:
         # Check CSV formatting
         df = pd.read_csv(args.pdbs_csv)
-        if not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() >= 3:
+        if (
+            not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() >= 3
+            and not args.custom_chain_mode
+        ):
             log.error(
                 f"Multi-PDB input: Please specify CSV  with columns ['pdb', 'Hchain', 'Lchain'] with PDB names (no extension), H and L chains"
             )
@@ -347,6 +375,8 @@ def main(args):
         exclude_heavy=args.exclude_heavy,
         exclude_light=args.exclude_light,
         batch_size=args.batch_size,
+        extract_embeddings=args.extract_embeddings,
+        custom_chain_mode=args.custom_chain_mode,
         num_threads=args.num_threads,
         seed=args.seed,
         save_flag=True,

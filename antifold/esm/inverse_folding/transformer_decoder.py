@@ -178,7 +178,8 @@ class TransformerDecoder(nn.Module):
 
         # decoder layers
         attn: Optional[Tensor] = None
-        inner_states: List[Optional[Tensor]] = [x]
+        # Include encoder output #MH
+        inner_states: List[Optional[Tensor]] = [enc, x]
         for idx, layer in enumerate(self.layers):
             if incremental_state is None:
                 self_attn_mask = self.buffered_future_mask(x)
