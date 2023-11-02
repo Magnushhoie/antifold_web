@@ -7,21 +7,23 @@
         </head>
         <body>
           <div id='content'>
-      <h1 id="antifold_web">antifold_web</h1>
-<p>Code for AntiFold paper, submitted for NeurIPS 2023.</p>
-<p>Code and model: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip">antifold.zip</a><br />
+      <h1 id="antifold">AntiFold</h1>
+<p>Code for AntiFold paper, accepted for <a href="https://openreview.net/forum?id=bxZMKHtlL6">NeurIPS 2023 GenBio spotlight</a></p>
+<p>Code: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip">antifold_code.zip</a><br />
 Model: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt">model.pt</a></p>
 <h2 id="quickstart-guide">Quickstart guide</h2>
 <p>See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">Google Colab</a> or follow quickstart guide with example PDBs:</p>
-<pre><code class="hljs bash language-bash"><span class="hljs-comment"># Download</span>
-<span class="hljs-built_in">mkdir</span> antifold &amp;&amp; <span class="hljs-built_in">cd</span> antifold
+<pre><code class="hljs bash language-bash"><span class="hljs-comment"># Download AntiFold model and code (Linux)</span>
+<span class="hljs-built_in">mkdir</span> -p antifold/models &amp;&amp; <span class="hljs-built_in">cd</span> antifold
 wget https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip
+wget -P models/ https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt
 unzip antifold.zip
 
-<span class="hljs-comment"># Setup environment and install AntiFold</span>
+<span class="hljs-comment"># Setup environment and install AntiFold (GPU)</span>
+<span class="hljs-comment"># Nb: For CPU use: conda install -c pytorch pytorch</span>
 conda create --name antifold python=3.9 -y
 conda activate antifold
-conda install pytorch -c pytorch -y <span class="hljs-comment"># cudatoolkit=11.3 recommended</span>
+conda install -c conda-forge pytorch-gpu <span class="hljs-comment"># cudatoolkit=11.3 recommended</span>
 conda install -c pyg pyg -y
 conda install -c conda-forge pip -y
 
@@ -34,39 +36,41 @@ python antifold/main.py \
     --pdb_file data/pdbs/6y1l_imgt.pdb \
     --heavy_chain H \
     --light_chain L \
-    --sampling_temp 0.2 \
-    --regions CDRH3
+    --sampling_temp <span class="hljs-string">&quot;0.2&quot;</span> \
+    --regions <span class="hljs-string">&quot;CDRH3&quot;</span>
 
-<span class="hljs-comment"># Run on example pdbs, all CDRs</span>
+<span class="hljs-comment"># Run on example pdbs, all CDRs, temperatures 0.20 and 0.30</span>
 python antifold/main.py \
     --out_dir output/example_pdbs \
     --pdbs_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
-    --sampling_temp 0.2 \
-    --regions CDR1 CDR2 CDR3
+    --sampling_temp <span class="hljs-string">&quot;0.20 0.30&quot;</span> \
+    --regions <span class="hljs-string">&quot;CDR1 CDR2 CDR3&quot;</span>
 </code></pre>
 <h2 id="example-output">Example output</h2>
 <p>Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a></p>
-<pre><code class="hljs csv language-csv"><span class="hljs-attribute">pdb_pos</span>,pdb_chain,aa_orig,aa_pred,pdb_posins,perplexity,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y
-<span class="hljs-attribute">2</span>,H,V,M,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>.<span class="hljs-number">7221</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9226</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">4708</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1467</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1754</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">5648</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">2163</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">5528</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">1208</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">6035</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">7443</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">0992</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">2694</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">8115</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">4361</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">1866</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9160</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">9723</span>,-<span class="hljs-number">3</span>.<span class="hljs-number">7213</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">9959</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">1096</span>
-<span class="hljs-attribute">3</span>,H,Q,Q,<span class="hljs-number">3</span>,<span class="hljs-number">1</span>.<span class="hljs-number">8164</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">5358</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3109</span>,-<span class="hljs-number">8</span>.<span class="hljs-number">1272</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">2464</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">4795</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">1501</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">2837</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">4261</span>,-<span class="hljs-number">2</span>.<span class="hljs-number">0793</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">4281</span>,-<span class="hljs-number">8</span>.<span class="hljs-number">6754</span>,-<span class="hljs-number">5</span>.<span class="hljs-number">7362</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">2200</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">1787</span>,-<span class="hljs-number">4</span>.<span class="hljs-number">4097</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">2673</span>,-<span class="hljs-number">6</span>.<span class="hljs-number">3677</span>,-<span class="hljs-number">7</span>.<span class="hljs-number">0966</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">2125</span>,-<span class="hljs-number">11</span>.<span class="hljs-number">0414</span>
-<span class="hljs-attribute">4</span>,H,L,L,<span class="hljs-number">4</span>,<span class="hljs-number">1</span>.<span class="hljs-number">0017</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">7056</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">7263</span>,-<span class="hljs-number">17</span>.<span class="hljs-number">5119</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3137</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">0561</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">7474</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">7022</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">1318</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">2906</span>,-<span class="hljs-number">0</span>.<span class="hljs-number">0001</span>,-<span class="hljs-number">9</span>.<span class="hljs-number">5772</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">8369</span>,-<span class="hljs-number">14</span>.<span class="hljs-number">1303</span>,-<span class="hljs-number">12</span>.<span class="hljs-number">3832</span>,-<span class="hljs-number">15</span>.<span class="hljs-number">3246</span>,-<span class="hljs-number">16</span>.<span class="hljs-number">9911</span>,-<span class="hljs-number">17</span>.<span class="hljs-number">1241</span>,-<span class="hljs-number">10</span>.<span class="hljs-number">8850</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">3156</span>,-<span class="hljs-number">13</span>.<span class="hljs-number">4724</span>
+<pre><code class="hljs csv language-csv">pdb_pos,pdb_chain,aa_orig,aa_pred,pdb_posins,perplexity,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y
+2,H,V,M,2,1.6488,<span class="hljs-string">-4</span>.9963,<span class="hljs-string">-6</span>.6117,<span class="hljs-string">-6</span>.3181,<span class="hljs-string">-6</span>.3243,<span class="hljs-string">-6</span>.7570,<span class="hljs-string">-4</span>.2518,<span class="hljs-string">-6</span>.7514,<span class="hljs-string">-5</span>.2540,<span class="hljs-string">-6</span>.8067,<span class="hljs-string">-5</span>.8619,<span class="hljs-string">-0</span>.0904,<span class="hljs-string">-6</span>.5493,<span class="hljs-string">-4</span>.8639,<span class="hljs-string">-6</span>.6316,<span class="hljs-string">-6</span>.3084,<span class="hljs-string">-5</span>.1900,<span class="hljs-string">-5</span>.0988,<span class="hljs-string">-3</span>.7295,<span class="hljs-string">-8</span>.0480,<span class="hljs-string">-7</span>.3236
+3,H,Q,Q,3,1.3889,<span class="hljs-string">-10</span>.5258,<span class="hljs-string">-12</span>.8463,<span class="hljs-string">-8</span>.4800,<span class="hljs-string">-4</span>.7630,<span class="hljs-string">-12</span>.9094,<span class="hljs-string">-11</span>.0924,<span class="hljs-string">-5</span>.6136,<span class="hljs-string">-10</span>.9870,<span class="hljs-string">-3</span>.1119,<span class="hljs-string">-8</span>.1113,<span class="hljs-string">-9</span>.4382,<span class="hljs-string">-6</span>.2246,<span class="hljs-string">-13</span>.3660,<span class="hljs-string">-0</span>.0701,<span class="hljs-string">-4</span>.9957,<span class="hljs-string">-10</span>.0301,<span class="hljs-string">-6</span>.8618,<span class="hljs-string">-7</span>.5810,<span class="hljs-string">-13</span>.6721,<span class="hljs-string">-11</span>.4157
+4,H,L,L,4,1.0021,<span class="hljs-string">-13</span>.3581,<span class="hljs-string">-12</span>.6206,<span class="hljs-string">-17</span>.5484,<span class="hljs-string">-12</span>.4801,<span class="hljs-string">-9</span>.8792,<span class="hljs-string">-13</span>.6382,<span class="hljs-string">-14</span>.8609,<span class="hljs-string">-13</span>.9344,<span class="hljs-string">-16</span>.4080,<span class="hljs-string">-0</span>.0002,<span class="hljs-string">-9</span>.2727,<span class="hljs-string">-16</span>.6532,<span class="hljs-string">-14</span>.0476,<span class="hljs-string">-12</span>.5943,<span class="hljs-string">-15</span>.4559,<span class="hljs-string">-16</span>.9103,<span class="hljs-string">-17</span>.0809,<span class="hljs-string">-10</span>.5670,<span class="hljs-string">-13</span>.5334,<span class="hljs-string">-13</span>.4324
+...
 </code></pre>
 <p>Output FASTA file with sampled sequences: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.fasta">6y1l_imgt.fasta</a></p>
 <ul>
 <li>Score: average log-odds of residues in the sampled region</li>
 <li>Global: average log-odds of all residues (IMGT positions 1-128)</li>
 </ul>
-<pre><code class="hljs fasta language-fasta">&gt;6y1l_imgt , <span class="hljs-attribute">score</span>=0.3504, <span class="hljs-attribute">global_score</span>=0.3504, regions=[<span class="hljs-string">&#x27;CDR1&#x27;</span>, <span class="hljs-string">&#x27;CDR2&#x27;</span>, <span class="hljs-string">&#x27;CDR3H&#x27;</span>], <span class="hljs-attribute">model_name</span>=AntiFold, <span class="hljs-attribute">seed</span>=42
+<pre><code class="hljs fasta language-fasta">&gt;6y1l_imgt , <span class="hljs-attribute">score</span>=0.2934, <span class="hljs-attribute">global_score</span>=0.2934, regions=[<span class="hljs-string">&#x27;CDR1&#x27;</span>, <span class="hljs-string">&#x27;CDR2&#x27;</span>, <span class="hljs-string">&#x27;CDRH3&#x27;</span>], <span class="hljs-attribute">model_name</span>=AntiFold, <span class="hljs-attribute">seed</span>=42
 VQLQESGPGLVKPSETLSLTCAVSGYSISSGYYWGWIRQPPGKGLEWIGSIYHSGSTYYN
 PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLTQSSHNDANWGQGTLVTVSS/V
 LTQPPSVSAAPGQKVTISCSGSSSNIGNNYVSWYQQLPGTAPKRLIYDNNKRPSGIPDRF
 SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
-&gt; <span class="hljs-attribute">T</span>=0.50, <span class="hljs-attribute">sample</span>=1, <span class="hljs-attribute">score</span>=0.5675, <span class="hljs-attribute">global_score</span>=0.2636, <span class="hljs-attribute">seq_recovery</span>=0.8898, <span class="hljs-attribute">mutations</span>=13
-VQLQESGPGLVKPSETLSLTCAVSGASITSSYYWGWIRQPPGKGLEWIGSIYYSGTTYYN
-PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLYGSPYSTPAWGQGTLVTVSS/V
+&gt; <span class="hljs-attribute">T</span>=0.20, <span class="hljs-attribute">sample</span>=1, <span class="hljs-attribute">score</span>=0.3930, <span class="hljs-attribute">global_score</span>=0.1869, <span class="hljs-attribute">seq_recovery</span>=0.8983, <span class="hljs-attribute">mutations</span>=12
+VQLQESGPGLVKPSETLSLTCAVSGASITSSYYWGWIRQPPGKGLEWIGSIYYSGSTYYN
+PSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCAGLYGSPWSNPYWGQGTLVTVSS/V
 LTQPPSVSAAPGQKVTISCSGSSSNIGNNYVSWYQQLPGTAPKRLIYDNNKRPSGIPDRF
 SGSKSGTSATLGITGLQTGDEADYYCGTWDSSLNPVFGGGTKLEIKR
+<span class="hljs-built_in">..</span>.
 </code></pre>
 <h2 id="example-notebook">Example notebook</h2>
 <p>Notebook: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/colab.ipynb">colab.ipynb</a></p>
@@ -128,7 +132,7 @@ optional arguments:
   --num_seq_per_target NUM_SEQ_PER_TARGET
                         Number of sequences to sample from each antibody PDB
   --sampling_temp SAMPLING_TEMP [SAMPLING_TEMP ...]
-                        A string of temperatures, 0.2 0.25 0.5. Sampling temperature <span class="hljs-keyword">for</span> amino acids. Suggested values 0.1, 0.15, 0.2, 0.25, 0.3. Higher values will lead to more diversity.
+                        A string of temperatures e.g. 0.2 0.25 0.5. Sampling temperature <span class="hljs-keyword">for</span> amino acids. Suggested values 0.1, 0.15, 0.2, 0.25, 0.3. Higher values will lead to more diversity.
   --limit_variation     Limit variation to as many mutations as expected from temperature sampling
   --exclude_heavy       Exclude heavy chain from sampling
   --exclude_light       Exclude light chain from sampling

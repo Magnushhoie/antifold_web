@@ -92,15 +92,20 @@ def load_IF1_checkpoint(model, checkpoint_path: str = ""):
 def load_IF1_model(checkpoint_path: str = ""):
     """Load raw/FT IF1 model"""
 
-    # Suppress regression weights warning - not needed
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        model, _ = antifold.esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
+    # Download IF1 weights
+    if not checkpoint_path or checkpoint_path == "IF1" or checkpoint_path == "ESM-IF1":
+        log.info(
+            f"Warning: Loading pre-trained ESM-IF1 instead of AntiFold model (no checkpoint provided)"
+        )
+        # Suppress regression weights warning - not needed
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            model, _ = antifold.esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
 
+    # Load AntiFold weights locally
     if checkpoint_path:
+        model, _ = antifold.esm.pretrained._load_IF1_local()
         model = load_IF1_checkpoint(model, checkpoint_path)
-    else:
-        log.info(f"Loaded raw IF1 model (no checkpoint provided)")
 
     # Evaluation mode when predicting
     model = model.eval()
@@ -164,7 +169,9 @@ def get_dataset_dataloader(pdbs_csv_or_dataframe, pdb_dir, batch_size, num_threa
         num_threads = min(num_threads, 4)
 
     # Load PDB coordinates
-    dataset = InverseData(gaussian_noise_flag=False,)
+    dataset = InverseData(
+        gaussian_noise_flag=False,
+    )
     dataset.populate(pdbs_csv_or_dataframe, pdb_dir)
 
     # Prepare torch dataloader at specified batch size
@@ -263,7 +270,10 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
 
         # Logits to DataFrame
         alphabet = antifold.esm.data.Alphabet.from_architecture("invariant_gvp")
-        df_logits = pd.DataFrame(data=seq_probs, columns=alphabet.all_toks[4:25],)
+        df_logits = pd.DataFrame(
+            data=seq_probs,
+            columns=alphabet.all_toks[4:25],
+        )
 
         # Limit to 20x amino-acids probs
         _alphabet = list("ACDEFGHIKLMNPQRSTVWY")
@@ -283,10 +293,12 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
         df_logits.insert(4, "pdb_posins", pdb_posins)
         df_logits.insert(5, "perplexity", perplexity)
 
-        # Skip if not IMGT numbered - 10 never found in IMGT numbered PDBs
-        if 10 in positions:
+        # Skip if not IMGT numbered - 10 never found in H-chain IMGT numbered PDBs
+        Hchain = pdb_chains[0]
+        Hpos = positions[pdb_chains == Hchain]
+        if 10 in Hpos:
             log.error(
-                f"WARNING: PDB {pdb_name}, is not IMGT numbered! Output probabilities will be incorrect. See https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/"
+                f"WARNING: PDB {pdb_name} seems to not be IMGT numbered! Output probabilities may be affected. See https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/"
             )
         # Limit to IMGT positions only (only ones trained on)
         # imgt_mask = get_imgt_mask(df_logits, imgt_regions=["all"])
@@ -620,9 +632,9 @@ def visualize_mutations(orig, mut, chain=""):
     mismatches = "".join(["X" if match else "_" for match in (orig != mut)])
 
     # Print
-    log.info(f"Mutations ({(orig != mut).sum()}):\t{mismatches}")
-    log.info(f"Original {chain}:\t\t{''.join(orig)}")
-    log.info(f"Mutated {chain}:\t\t{''.join(mut)}\n")
+    print(f"Mutations ({(orig != mut).sum()}):\t{mismatches}")
+    print(f"Original {chain}:\t\t{''.join(orig)}")
+    print(f"Mutated {chain}:\t\t{''.join(mut)}\n")
 
 
 def df_logits_to_probs(df_logits):
