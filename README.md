@@ -1,10 +1,9 @@
 AntiFold
 ==============================
 
-Code for AntiFold paper, accepted for [NeurIPS 2023 GenBio spotlight](https://openreview.net/forum?id=bxZMKHtlL6).
+Code for AntiFold paper, accepted for [NeurIPS 2023 GenBio spotlight](https://openreview.net/forum?id=bxZMKHtlL6)
 
-Code (Linux): [antifold.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip)
-Code (MacOS): [antifold_macos.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_macos.zip))
+Code: [antifold_code.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip)
 Model: [model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt)
 
 ## Quickstart guide
