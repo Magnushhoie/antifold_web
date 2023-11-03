@@ -276,7 +276,7 @@ def check_valid_input(args):
     # Option 2: Check PDBs in PDB dir and CSV formatted correctly
     if args.pdb_dir and args.pdbs_csv:
         # Check CSV formatting
-        df = pd.read_csv(args.pdbs_csv)
+        df = pd.read_csv(args.pdbs_csv, comment="#")
         if (
             not df.columns.isin(["pdb", "Hchain", "Lchain"]).sum() >= 3
             and not args.custom_chain_mode
@@ -352,7 +352,7 @@ def main(args):
 
     # Option 2: CSV + PDB dir
     else:
-        pdbs_csv = pd.read_csv(args.pdbs_csv)
+        pdbs_csv = pd.read_csv(args.pdbs_csv, comment="#")
         pdb_dir = args.pdb_dir
 
     log.info(

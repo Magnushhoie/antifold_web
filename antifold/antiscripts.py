@@ -59,7 +59,7 @@ IMGT_dict = {
 
 def load_IF1_checkpoint(model, checkpoint_path: str = ""):
     # Load
-    log.info(f"Loading checkpoint from {checkpoint_path}...")
+    log.info(f"Loading AntiFold model {checkpoint_path}...")
 
     # Check for CPU/GPU load
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -95,7 +95,7 @@ def load_IF1_model(checkpoint_path: str = ""):
     # Download IF1 weights
     if not checkpoint_path or checkpoint_path == "IF1" or checkpoint_path == "ESM-IF1":
         log.info(
-            f"Warning: Loading pre-trained ESM-IF1 instead of AntiFold model (no checkpoint provided)"
+            f"WARNING: Loading pre-trained ESM-IF1 instead of AntiFold model (no checkpoint provided)"
         )
         # Suppress regression weights warning - not needed
         with warnings.catch_warnings():
@@ -118,14 +118,15 @@ def load_IF1_model(checkpoint_path: str = ""):
     return model
 
 
-def get_dataset_pdb_name_res_posins_chains(dataset, idx):
+def get_dataset_pdb_name_chainsname_res_posins_chains(dataset, idx):
     """Gets PDB sequence, position+insertion codes and chains from dataset"""
 
-    # Get PDB sequence, position+insertion codes and chains from dataset
-    pdb_path = dataset.pdb_paths[idx]
-    # pdb_info = dataset.pdb_info_dict[pdb_path]
-    # pdb_name = os.path.splitext(os.path.basename(pdb_info["pdb_path"]))[0]
-    pdb_name = dataset.csv_info_dict[pdb_path]["pdb"]
+    # PDB path
+    pdb_path = dataset.pdb_info_dict[idx]["pdb_path"]
+
+    # PDB names
+    pdb_name = dataset.pdb_info_dict[idx]["pdb"]
+    pdb_chainsname = dataset.pdb_info_dict[idx]["pdb_chainsname"]
 
     # Sequence - gaps
     seq = dataset[idx][2]
@@ -139,7 +140,7 @@ def get_dataset_pdb_name_res_posins_chains(dataset, idx):
     pdb_posins = [p[:-1] for p in posinschain]
     pdb_chains = [p[-1] for p in posinschain]
 
-    return pdb_name, pdb_res, pdb_posins, pdb_chains
+    return pdb_name, pdb_chainsname, pdb_res, pdb_posins, pdb_chains
 
 
 def logits_to_seqprobs_list(logits, tokens):
@@ -284,10 +285,11 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
         # Get PDB sequence, position+insertion code and H+L chain idxs
         (
             pdb_name,
+            pdb_chainsname,
             pdb_res,
             pdb_posins,
             pdb_chains,
-        ) = get_dataset_pdb_name_res_posins_chains(dataset, idx)
+        ) = get_dataset_pdb_name_chainsname_res_posins_chains(dataset, idx)
 
         # Check matches w/ residue probs
         assert len(seq_probs) == len(pdb_posins)
@@ -309,7 +311,7 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
         perplexity = calc_pos_perplexity(df_logits)
 
         # Add to DataFrame
-        df_logits.name = pdb_name
+        df_logits.name = pdb_chainsname
         df_logits.insert(0, "pdb_pos", positions)
         df_logits.insert(1, "pdb_chain", pdb_chains)
         df_logits.insert(2, "aa_orig", pdb_res)
@@ -345,7 +347,7 @@ def df_logits_list_to_logprob_csvs(
         df_out = df_logits_to_logprobs(df)
         # Save
         outpath = f"{out_dir}/{df.name}.csv"
-        log.info(f"Writing {df.name} log_probs CSV to {outpath}")
+        log.info(f"Writing {df.name} per-residue log probs CSV to {outpath}")
         df_out.to_csv(outpath, float_format=float_format, index=False)
 
         if embeddings_list:

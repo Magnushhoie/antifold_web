@@ -183,24 +183,38 @@ class InverseData(torch.utils.data.Dataset):
             if not os.path.exists(pdb_path):
                 raise Exception(f"Unable to find PDB file: {pdb_path}")
 
-        # PDB paths
-        self.pdb_paths = pdb_path_list
+        # Infer order of chain from CSV columns (first item pdb, then chains)
+        # Should be Hchain, Lchain, then any order
+        chain_order = [c for c in df.columns[1:] if "chain" in c]
 
-        # PDB info dict: pdb_path, base pdb, Hchain, Lchain
-        df.index = pdb_path_list
-        df.insert(0, "pdb_path", pdb_path_list)
-        pdb_info_dict = df.to_dict("index")
-        self.pdb_info_dict = pdb_info_dict
+        # Construct info dict
+        self.pdb_info_dict = {}
 
-        # CSV info dict: chain order and pdb name with chains
-        self.csv_info_dict = {}
-        chain_order = df.columns[2:]
-        for pdb_path in pdb_path_list:
-            pdb_info = self.pdb_info_dict[pdb_path]
-            chains = [pdb_info[c] for c in chain_order if not pd.isna(pdb_info[c])]
-            _pdb_chains = pdb_info["pdb"] + "_" + "".join(chains)
+        for i in range(len(df)):
+            _pdb = df.loc[i, "pdb"]
+            _pdb_path = pdb_path_list[i]
 
-            self.csv_info_dict[pdb_path] = {"chain_order": chains, "pdb": _pdb_chains}
+            # Extract chains present in CSV
+            chains = df.loc[i, chain_order]
+            chains = [c for c in chains if not pd.isna(c)]
+            if len(chains) == 0:
+                raise Exception(f"No chains found for PDB {_pdb}")
+
+            # Infer heavy and light chain
+            if len(chains) >= 2:
+                Hchain, Lchain = chains[0], chains[1]
+
+            # PDB name with chains
+            _pdb_chainsname = _pdb + "_" + "".join(chains)
+
+            self.pdb_info_dict[i] = {
+                "pdb": _pdb,
+                "pdb_path": _pdb_path,
+                "chain_order": chains,
+                "pdb_chainsname": _pdb_chainsname,
+                "Hchain": Hchain,
+                "Lchain": Lchain,
+            }
 
     def __getitem__(self, idx: int):
         """
@@ -208,11 +222,10 @@ class InverseData(torch.utils.data.Dataset):
         Format data to pass to PyTorch DataLoader (with collate_fn = util.CoordBatchConverter)
         """
 
-        # Experimental - use any chains (e.g. only Heavy, or any chains with ESM-IF1)
+        # Experimental - use any chains (e.g. with antigen or for ESM-IF1)
         if self.custom_chain_mode:
-            pdb_path = self.pdb_paths[idx]
-            pdb_info = self.pdb_info_dict[pdb_path]
-            chains = self.csv_info_dict[pdb_path]["chain_order"]
+            pdb_path = self.pdb_info_dict[idx]["pdb_path"]
+            chains = self.pdb_info_dict[idx]["chain_order"]
 
             coords, seq_pdb, pos_pdb, pos_pdb_arr_str = self.load_coords_any(
                 pdb_path, chains
@@ -220,11 +233,14 @@ class InverseData(torch.utils.data.Dataset):
 
         # Regular mode
         else:
-            pdb_path = self.pdb_paths[idx]
-            pdb_info = self.pdb_info_dict[pdb_path]
+            pdb_path = self.pdb_info_dict[idx]["pdb_path"]
+            Hchain = self.pdb_info_dict[idx]["Hchain"]
+            Lchain = self.pdb_info_dict[idx]["Lchain"]
 
             coords, seq_pdb, pos_pdb, pos_pdb_arr_str = self.load_coords_HL(
-                pdb_path, pdb_info["Hchain"], pdb_info["Lchain"]
+                pdb_path,
+                Hchain,
+                Lchain,
             )
 
         # Not used, included for legacy reasons
