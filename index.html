@@ -39,6 +39,7 @@ python antifold/main.py \
     --pdb_file data/pdbs/6y1l_imgt.pdb \
     --heavy_chain H \
     --light_chain L \
+    --num_seq_per_target 10 \
     --sampling_temp <span class="hljs-string">&quot;0.2&quot;</span> \
     --regions <span class="hljs-string">&quot;CDRH3&quot;</span>
 
@@ -47,6 +48,7 @@ python antifold/main.py \
     --out_dir output/example_pdbs \
     --pdbs_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
+    --num_seq_per_target 10 \
     --sampling_temp <span class="hljs-string">&quot;0.20 0.30&quot;</span> \
     --regions <span class="hljs-string">&quot;CDR1 CDR2 CDR3&quot;</span>
 
@@ -57,10 +59,7 @@ python antifold/main.py \
     --pdb_dir data/untested/ \
     --model_path <span class="hljs-string">&quot;ESM-IF1&quot;</span> \
     --custom_chain_mode \
-    --extract_embeddings \
-    --sampling_temp <span class="hljs-string">&quot;0&quot;</span> \
-    --num_seq_per_target <span class="hljs-string">&quot;0&quot;</span> \
-    --regions <span class="hljs-string">&quot;all&quot;</span>
+    --extract_embeddings
 </code></pre>
 <h2 id="example-output">Example output</h2>
 <p>Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a></p>

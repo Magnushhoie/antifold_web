@@ -40,6 +40,7 @@ python antifold/main.py \
     --pdb_file data/pdbs/6y1l_imgt.pdb \
     --heavy_chain H \
     --light_chain L \
+    --num_seq_per_target 10 \
     --sampling_temp "0.2" \
     --regions "CDRH3"
 
@@ -48,6 +49,7 @@ python antifold/main.py \
     --out_dir output/example_pdbs \
     --pdbs_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
+    --num_seq_per_target 10 \
     --sampling_temp "0.20 0.30" \
     --regions "CDR1 CDR2 CDR3"
 
@@ -58,10 +60,7 @@ python antifold/main.py \
     --pdb_dir data/untested/ \
     --model_path "ESM-IF1" \
     --custom_chain_mode \
-    --extract_embeddings \
-    --sampling_temp "0" \
-    --num_seq_per_target "0" \
-    --regions "all"
+    --extract_embeddings
 ```
 
 ## Example output

@@ -27,6 +27,7 @@ python antifold/main.py \
     --pdb_file data/pdbs/6y1l_imgt.pdb \
     --heavy_chain H \
     --light_chain L \
+    --num_seq_per_target 10 \
     --sampling_temp "0.2" \
     --regions "CDRH3"
 
@@ -35,6 +36,7 @@ python antifold/main.py \
     --out_dir output/example_pdbs \
     --pdbs_csv data/example_pdbs.csv \
     --pdb_dir data/pdbs \
+    --num_seq_per_target 10 \
     --sampling_temp "0.20 0.30" \
     --regions "CDR1 CDR2 CDR3"
 
@@ -45,10 +47,7 @@ python antifold/main.py \
     --pdb_dir data/untested/ \
     --model_path "ESM-IF1" \
     --custom_chain_mode \
-    --extract_embeddings \
-    --sampling_temp "0" \
-    --num_seq_per_target "0" \
-    --regions "all"
+    --extract_embeddings
     """
     p = ArgumentParser(
         description="Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained fold.\nPDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).\n\nFor IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/",
@@ -115,9 +114,9 @@ python antifold/main.py \
 
     p.add_argument(
         "--num_seq_per_target",
-        default=20,
+        default=0,
         type=int,
-        help="Number of sequences to sample from each antibody PDB",
+        help="Number of sequences to sample from each antibody PDB (default 0)",
     )
 
     p.add_argument(
@@ -355,9 +354,10 @@ def main(args):
         pdbs_csv = pd.read_csv(args.pdbs_csv, comment="#")
         pdb_dir = args.pdb_dir
 
-    log.info(
-        f"Will sample {args.num_seq_per_target} sequences from {len(pdbs_csv.values)} PDBs at temperature(s) {args.sampling_temp} and regions: {regions_to_mutate}"
-    )
+    if args.num_seq_per_target >= 1:
+        log.info(
+            f"Will sample {args.num_seq_per_target} sequences from {len(pdbs_csv.values)} PDBs at temperature(s) {args.sampling_temp} and regions: {regions_to_mutate}"
+        )
 
     # Load AntiFold or ESM-IF1 model
     model = load_IF1_model(args.model_path)
