@@ -312,11 +312,11 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
 
         # Add to DataFrame
         df_logits.name = pdb_chainsname
-        df_logits.insert(0, "pdb_pos", positions)
+        df_logits.insert(0, "pdb_posins", pdb_posins)
         df_logits.insert(1, "pdb_chain", pdb_chains)
         df_logits.insert(2, "aa_orig", pdb_res)
         df_logits.insert(3, "aa_pred", aa_pred)
-        df_logits.insert(4, "pdb_posins", pdb_posins)
+        df_logits.insert(4, "pdb_pos", positions)
         df_logits.insert(5, "perplexity", perplexity)
 
         # Skip if not IMGT numbered - 10 never found in H-chain IMGT numbered PDBs
