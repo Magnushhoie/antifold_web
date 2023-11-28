@@ -23,7 +23,7 @@ unzip antifold.zip
 
 # Setup environment and install AntiFold (GPU)
 # Nb: For CPU use: conda install -c pytorch pytorch
-conda create --name antifold python=3.9 -y
+conda create --name antifold python=3.10 -y
 conda activate antifold
 conda install -c conda-forge pytorch-gpu # cudatoolkit=11.3 recommended
 conda install -c pyg pyg -y
