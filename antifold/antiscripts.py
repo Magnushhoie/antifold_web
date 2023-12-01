@@ -93,7 +93,9 @@ def load_IF1_model(checkpoint_path: str = ""):
     """Load raw/FT IF1 model"""
 
     if not os.path.exists(checkpoint_path) and not checkpoint_path == "ESM-IF1":
-        raise Exception(f"Unable to find model weights. File does not exist: {checkpoint_path}")
+        raise Exception(
+            f"Unable to find model weights. File does not exist: {checkpoint_path}"
+        )
 
     # Download IF1 weights
     if checkpoint_path == "ESM-IF1":

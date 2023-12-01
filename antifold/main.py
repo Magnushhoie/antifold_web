@@ -314,6 +314,7 @@ def check_valid_input(args):
             f"--use_esm_if1_weights flag set. Using ESM-IF1 weights instead of AntiFold fine-tuned weights"
         )
 
+
 def main(args):
     """Predicts antibody heavy and light chain inverse folding probabilities"""
 
