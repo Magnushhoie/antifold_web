@@ -307,15 +307,15 @@ def predictions_list_to_df_logits_list(all_seqprobs_list, dataset, dataloader):
 
         # Add PDB info
         positions = pdb_posins_to_pos(pd.Series(pdb_posins))
-        aa_pred = np.array((_alphabet))[df_logits[_alphabet].values.argmax(axis=1)]
+        top_res = np.array((_alphabet))[df_logits[_alphabet].values.argmax(axis=1)]
         perplexity = calc_pos_perplexity(df_logits)
 
         # Add to DataFrame
         df_logits.name = pdb_chainsname
         df_logits.insert(0, "pdb_posins", pdb_posins)
         df_logits.insert(1, "pdb_chain", pdb_chains)
-        df_logits.insert(2, "aa_orig", pdb_res)
-        df_logits.insert(3, "aa_pred", aa_pred)
+        df_logits.insert(2, "pdb_res", pdb_res)
+        df_logits.insert(3, "top_res", top_res)
         df_logits.insert(4, "pdb_pos", positions)
         df_logits.insert(5, "perplexity", perplexity)
 
@@ -520,7 +520,7 @@ def sample_new_sequences_CDR_HL(
     if return_mutation_df:
         mut_list = np.where(sampled_seq != orig_seq)[0]
         df_mut = df.loc[
-            mut_list, ["aa_orig", "aa_pred", "pdb_posins", "pdb_chain"]
+            mut_list, ["pdb_res", "top_res", "pdb_posins", "pdb_chain"]
         ].copy()
         df_mut.insert(1, "aa_sampled", sampled_seq[mut_list])
 
@@ -576,12 +576,12 @@ def get_dfs_HL(df):
 
 def get_df_seq(df):
     """Get PDB sequence"""
-    return df["aa_orig"].values
+    return df["pdb_res"].values
 
 
 def get_df_seq_pred(df):
     """Get PDB sequence"""
-    return df["aa_pred"].values
+    return df["top_res"].values
 
 
 def get_df_seqs_HL(df):
