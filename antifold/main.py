@@ -45,7 +45,7 @@ python antifold/main.py \
     --out_dir output/untested/ \
     --pdbs_csv data/untested.csv \
     --pdb_dir data/untested/ \
-    --model_path "ESM-IF1" \
+    --use_esm_if1_weights \
     --custom_chain_mode \
     --extract_embeddings
     """
@@ -178,7 +178,14 @@ python antifold/main.py \
     p.add_argument(
         "--model_path",
         default="models/model.pt",
-        help="AntiFold model weights. Set to ESM-IF1 to use ESM-IF1 model instead of AntiFold fine-tuned model",
+        help="AntiFold model weights. See --use_esm_if1_weights flag to use ESM-IF1 weights instead of AntiFold",
+    )
+
+    p.add_argument(
+        "--use_esm_if1_weights",
+        default=False,
+        action="store_true",
+        help="Use ESM-IF1 weights instead of AntiFold",
     )
 
     p.add_argument(
@@ -301,12 +308,11 @@ def check_valid_input(args):
             sys.exit(1)
 
     # Check model exists, or set to ESM-IF1
-    if not args.model_path or args.model_path == "ESM-IF1" or args.model_path == "IF1":
+    if args.use_esm_if1_weights:
+        args.model_path = "ESM-IF1"
         log.info(
-            f"Model path not specified or set to ESM-IF1. Using ESM-IF1 model instead of AntiFold fine-tuned model"
+            f"--use_esm_if1_weights flag set. Using ESM-IF1 weights instead of AntiFold fine-tuned weights"
         )
-        args.model_path = ""
-
 
 def main(args):
     """Predicts antibody heavy and light chain inverse folding probabilities"""
@@ -413,7 +419,7 @@ if __name__ == "__main__":
     check_valid_input(args)
 
     try:
-        log.info(f"Sampling PDBs with Antifold ...")
+        log.info(f"Running inverse folding on PDBs ...")
         main(args)
 
     except Exception as E:

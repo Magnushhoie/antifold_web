@@ -92,10 +92,13 @@ def load_IF1_checkpoint(model, checkpoint_path: str = ""):
 def load_IF1_model(checkpoint_path: str = ""):
     """Load raw/FT IF1 model"""
 
+    if not os.path.exists(checkpoint_path) and not checkpoint_path == "ESM-IF1":
+        raise Exception(f"Unable to find model weights. File does not exist: {checkpoint_path}")
+
     # Download IF1 weights
-    if not checkpoint_path or checkpoint_path == "IF1" or checkpoint_path == "ESM-IF1":
+    if checkpoint_path == "ESM-IF1":
         log.info(
-            f"WARNING: Loading pre-trained ESM-IF1 instead of AntiFold model (no checkpoint provided)"
+            f"WARNING: Loading ESM-IF1 weights instead of fine-tuned AntiFold weights"
         )
         # Suppress regression weights warning - not needed
         with warnings.catch_warnings():
@@ -103,7 +106,7 @@ def load_IF1_model(checkpoint_path: str = ""):
             model, _ = antifold.esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
 
     # Load AntiFold weights locally
-    if checkpoint_path:
+    else:
         model, _ = antifold.esm.pretrained._load_IF1_local()
         model = load_IF1_checkpoint(model, checkpoint_path)
 
