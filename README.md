@@ -81,6 +81,7 @@ python antifold/main.py \
     --extract_embeddings
 
 # Extract ESM-IF1 embeddings from PDBs in folder, from all chains listed in untested.csv (not limited to VH/VL)
+# Nb: The string must be "ESM-IF1" and not anything else to work
 python antifold/main.py \
     --out_dir output/untested/ \
     --pdbs_csv data/untested.csv \
@@ -92,19 +93,25 @@ python antifold/main.py \
 
 ## Input parameters
 Required parameters:
+```text
 - Option 1: PDB file (--pdb_file) + specified heavy and light chain (--heavy_chain and --light_chain)
 - Option 2: PDB folder (--pdb_dir) + CSV file specifying chains (--pdbs_csv)
 - Output directory (--out_dir) for output inverse folding probabilities CSV and optional generated sequences FASTA
+```
 
 Parameters for generating new sequences:
+```text
 - Number of sequences to generate (--num_seq_per_target)
 - Region to mutate (--region) based on inverse folding probabilities. Select from list in IMGT_dict (e.g. 'CDRH1 CDRH2 CDRH3')
 - Sampling temperature (--sampling_temp) controls generated sequence diversity, by scaling the inverse folding probabilities before sampling. Temperature = 1 means no change, while temperature ~ 0 only samples the most likely amino-acid at each position (acts as argmax).
+```
 
 Optional parameters:
+```
 - Multi-chain mode for including antigen or other chains (--custom_chain_mode) - Nb, experimental (see example above)
 - Extract latent representations of PDB within model (--extract_embeddings)
 - Use ESM-IF1 instead of AntiFold model weights (--model_path "ESM-IF1")
+```
 
 ## Example output
 Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a>
