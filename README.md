@@ -14,10 +14,9 @@ License: [BSD 3-Clause](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/LICE
 # Colab
 To test the method out without installing it you can try this: [![Open In Colab](images/colab-badge.svg)](https://colab.research.google.com/drive/1TTfgjoZx3mzF5u4e9b4Un9Y7b_rqXc_4)
 
-## Quickstart guide
+## Install and run AntiFold
 
-See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">Jupyter notebook</a> or follow quickstart guide with example PDBs:
-
+Use the <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">Jupyter notebook</a> or follow this guide with example PDBs:
 
 ### Download AntiFold
 ```bash
@@ -32,7 +31,7 @@ wget -P models/ https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model
 ```
 
 ### Install AntiFold (CPU)
-```
+```bash
 conda create --name antifold python=3.10 -y
 conda activate antifold
 conda install -c pytorch pytorch
@@ -43,7 +42,7 @@ pip install .
 ```
 
 ### Install AntiFold (GPU)
-```
+```bash
 conda create --name antifold python=3.10 -y
 conda activate antifold
 conda install -c conda-forge pytorch-gpu
