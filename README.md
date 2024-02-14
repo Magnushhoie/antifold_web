@@ -107,7 +107,7 @@ Parameters for generating new sequences:
 ```
 
 Optional parameters:
-```
+```text
 - Multi-chain mode for including antigen or other chains (--custom_chain_mode) - Nb, experimental (see example above)
 - Extract latent representations of PDB within model (--extract_embeddings)
 - Use ESM-IF1 instead of AntiFold model weights (--model_path "ESM-IF1")
