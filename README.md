@@ -53,12 +53,12 @@ python antifold/main.py \
     --sampling_temp "0.20 0.30" \
     --regions "CDR1 CDR2 CDR3"
 
-# Extract (ESM-IF1) embeddings with custom chains
+# Extract ESM-IF1 embeddings with custom chains
 python antifold/main.py \
     --out_dir output/untested/ \
     --pdbs_csv data/untested.csv \
     --pdb_dir data/untested/ \
-    --model_path "ESM-IF1" \
+    --use_esm_if1_weights \
     --custom_chain_mode \
     --extract_embeddings
 ```
@@ -133,8 +133,8 @@ fasta_dict = pdb_output_dict["6y1l_imgt"]["sequences"]
 usage: 
     # Predict on example PDBs in folder
     python antifold/main.py     --pdbs_csv data/example_pdbs.csv     --pdb_dir data/pdbs     --out_dir output/
-    
-Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained fold.
+
+Predict inverse folding probabilities for antibody variable domain, and sample sequences with maintained fold.
 PDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).
 
 For IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/
@@ -153,7 +153,7 @@ options:
   --out_dir OUT_DIR     Output directory
   --regions REGIONS     Space-separated regions to mutate. Default 'CDR1 CDR2 CDR3H'
   --num_seq_per_target NUM_SEQ_PER_TARGET
-                        Number of sequences to sample from each antibody PDB
+                        Number of sequences to sample from each antibody PDB (default 0)
   --sampling_temp SAMPLING_TEMP
                         A string of temperatures e.g. '0.20 0.25 0.50' (default 0.20). Sampling temperature for amino acids. Suggested values 0.10, 0.15, 0.20, 0.25, 0.30. Higher values will lead to more diversity.
   --limit_variation     Limit variation to as many mutations as expected from temperature sampling
@@ -167,7 +167,9 @@ options:
                         Number of CPU threads to use for parallel processing (0 = all available)
   --seed SEED           Seed for reproducibility
   --model_path MODEL_PATH
-                        AntiFold model weights. Set to 'ESM-IF1' to use ESM-IF1 model instead of AntiFold fine-tuned model
+                        AntiFold model weights. See --use_esm_if1_weights flag to use ESM-IF1 weights instead of AntiFold
+  --use_esm_if1_weights
+                        Use ESM-IF1 weights instead of AntiFold
   --verbose VERBOSE     Verbose printing
 ```
 

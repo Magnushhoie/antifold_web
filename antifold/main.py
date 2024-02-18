@@ -50,7 +50,7 @@ python antifold/main.py \
     --extract_embeddings
     """
     p = ArgumentParser(
-        description="Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained fold.\nPDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).\n\nFor IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/",
+        description="Predict antibody variable domain inverse folding probabilities and sample sequences with maintained fold.\nPDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).\n\nFor IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/",
         formatter_class=RawTextHelpFormatter,
         usage=usage,
     )
