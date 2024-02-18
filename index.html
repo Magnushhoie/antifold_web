@@ -9,31 +9,44 @@
           <div id='content'>
       <h1 id="antifold">AntiFold</h1>
 <p>Code for AntiFold paper, accepted for <a href="https://openreview.net/forum?id=bxZMKHtlL6">NeurIPS 2023 GenBio spotlight</a></p>
-<p>Webserver: <a href="https://opig.stats.ox.ac.uk/webapps/AntiFold/">OPIG webserver</a><br />
-Code: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip">antifold_code.zip</a><br />
-Model: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt">model.pt</a></p>
+<p>Webserver: <a href="https://opig.stats.ox.ac.uk/webapps/AntiFold/">OPIG webserver</a></p>
+<p>Code: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip">antifold_code.zip</a></p>
+<p>Model: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt">model.pt</a></p>
+<p>License: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/LICENSE">BSD 3-Clause</a></p>
 <h1 id="colab">Colab</h1>
 <p>To test the method out without installing it you can try this: <a href="https://colab.research.google.com/drive/1TTfgjoZx3mzF5u4e9b4Un9Y7b_rqXc_4"><img src="images/colab-badge.svg" alt="Open In Colab" /></a></p>
-<h2 id="quickstart-guide">Quickstart guide</h2>
-<p>See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">Jupyter notebook</a> or follow quickstart guide with example PDBs:</p>
-<pre><code class="hljs bash language-bash"><span class="hljs-comment"># Download AntiFold model and code (Linux)</span>
-<span class="hljs-built_in">mkdir</span> -p antifold/models &amp;&amp; <span class="hljs-built_in">cd</span> antifold
-wget https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip
-wget -P models/ https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt
-unzip antifold.zip
+<h2 id="install-and-run-antifold">Install and run AntiFold</h2>
+<p>Use the <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">Jupyter notebook</a> or follow this guide with example PDBs:</p>
+<h3 id="download-antifold">Download AntiFold</h3>
+<pre><code class="hljs bash language-bash"><span class="hljs-comment"># Download code</span>
+<span class="hljs-built_in">mkdir</span> -p antifold_code &amp;&amp; <span class="hljs-built_in">cd</span> antifold_code
+wget https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip
+unzip antifold_code.zip
 
-<span class="hljs-comment"># Setup environment and install AntiFold (GPU)</span>
-<span class="hljs-comment"># Nb: For CPU use: conda install -c pytorch pytorch</span>
-conda create --name antifold python=3.10 -y
+<span class="hljs-comment"># Download model</span>
+<span class="hljs-built_in">mkdir</span> -p models
+wget -P models/ https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt
+</code></pre>
+<h3 id="install-antifold-cpu">Install AntiFold (CPU)</h3>
+<pre><code class="hljs bash language-bash">conda create --name antifold python=3.10 -y
 conda activate antifold
-conda install -c conda-forge pytorch-gpu <span class="hljs-comment"># cudatoolkit=11.3 recommended</span>
+conda install -c pytorch pytorch
 conda install -c pyg pyg -y
 conda install -c conda-forge pip -y
-
-<span class="hljs-comment"># Install AntiFold</span>
+<span class="hljs-comment"># Install AntiFold from antifold_code directory</span>
 pip install .
 </code></pre>
-<pre><code class="hljs bash language-bash"><span class="hljs-comment"># Run on single PDB, CDRH3 only</span>
+<h3 id="install-antifold-gpu">Install AntiFold (GPU)</h3>
+<pre><code class="hljs bash language-bash">conda create --name antifold python=3.10 -y
+conda activate antifold
+conda install -c conda-forge pytorch-gpu
+conda install -c pyg pyg -y
+conda install -c conda-forge pip -y
+<span class="hljs-comment"># Install AntiFold from antifold_code directory</span>
+pip install .
+</code></pre>
+<h3 id="run-antifold-residue-probabilities-embeddings-sampled-sequences">Run AntiFold (residue probabilities, embeddings, sampled sequences)</h3>
+<pre><code class="hljs bash language-bash"><span class="hljs-comment"># Residue probabilities, sample 10 sequences in CDRH3 from single PDB</span>
 python antifold/main.py \
     --out_dir output/single_pdb \
     --pdb_file data/pdbs/6y1l_imgt.pdb \
@@ -43,7 +56,7 @@ python antifold/main.py \
     --sampling_temp <span class="hljs-string">&quot;0.2&quot;</span> \
     --regions <span class="hljs-string">&quot;CDRH3&quot;</span>
 
-<span class="hljs-comment"># Run on example pdbs, all CDRs, temperatures 0.20 and 0.30</span>
+<span class="hljs-comment"># Residue probabilities, sample 10 sequences at temperatures 0.20 &amp; 0.30 in CDRs 1-3 from folder of PDBs</span>
 python antifold/main.py \
     --out_dir output/example_pdbs \
     --pdbs_csv data/example_pdbs.csv \
@@ -52,7 +65,14 @@ python antifold/main.py \
     --sampling_temp <span class="hljs-string">&quot;0.20 0.30&quot;</span> \
     --regions <span class="hljs-string">&quot;CDR1 CDR2 CDR3&quot;</span>
 
-<span class="hljs-comment"># Extract (ESM-IF1) embeddings with custom chains</span>
+<span class="hljs-comment"># Extract AntiFold embeddings from PDBs in folder</span>
+python antifold/main.py \
+    --out_dir output/untested/ \
+    --pdbs_csv data/untested.csv \
+    --pdb_dir data/untested/ \
+    --extract_embeddings
+
+<span class="hljs-comment"># Extract ESM-IF1 embeddings from PDBs in folder, from all chains listed in untested.csv (not limited to VH/VL)</span>
 python antifold/main.py \
     --out_dir output/untested/ \
     --pdbs_csv data/untested.csv \
@@ -63,6 +83,15 @@ python antifold/main.py \
 </code></pre>
 <h2 id="example-output">Example output</h2>
 <p>Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a></p>
+<ul>
+<li>pdb_pos - PDB residue number</li>
+<li>pdb_chain - PDB chain</li>
+<li>aa_orig - PDB residue (e.g. 112)</li>
+<li>aa_pred - Top predicted residue by AntiFold (argmax) for this position</li>
+<li>pdb_posins - PDB residue number with insertion code (e.g. 112A)</li>
+<li>perplexity - Inverse folding tolerance (higher is more tolerant) to mutations. See paper for more details.</li>
+<li>Amino-acids - Inverse folding scores (log-likelihood) for the given position</li>
+</ul>
 <pre><code class="hljs csv language-csv">pdb_pos,pdb_chain,aa_orig,aa_pred,pdb_posins,perplexity,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y
 2,H,V,M,2,1.6488,<span class="hljs-string">-4</span>.9963,<span class="hljs-string">-6</span>.6117,<span class="hljs-string">-6</span>.3181,<span class="hljs-string">-6</span>.3243,<span class="hljs-string">-6</span>.7570,<span class="hljs-string">-4</span>.2518,<span class="hljs-string">-6</span>.7514,<span class="hljs-string">-5</span>.2540,<span class="hljs-string">-6</span>.8067,<span class="hljs-string">-5</span>.8619,<span class="hljs-string">-0</span>.0904,<span class="hljs-string">-6</span>.5493,<span class="hljs-string">-4</span>.8639,<span class="hljs-string">-6</span>.6316,<span class="hljs-string">-6</span>.3084,<span class="hljs-string">-5</span>.1900,<span class="hljs-string">-5</span>.0988,<span class="hljs-string">-3</span>.7295,<span class="hljs-string">-8</span>.0480,<span class="hljs-string">-7</span>.3236
 3,H,Q,Q,3,1.3889,<span class="hljs-string">-10</span>.5258,<span class="hljs-string">-12</span>.8463,<span class="hljs-string">-8</span>.4800,<span class="hljs-string">-4</span>.7630,<span class="hljs-string">-12</span>.9094,<span class="hljs-string">-11</span>.0924,<span class="hljs-string">-5</span>.6136,<span class="hljs-string">-10</span>.9870,<span class="hljs-string">-3</span>.1119,<span class="hljs-string">-8</span>.1113,<span class="hljs-string">-9</span>.4382,<span class="hljs-string">-6</span>.2246,<span class="hljs-string">-13</span>.3660,<span class="hljs-string">-0</span>.0701,<span class="hljs-string">-4</span>.9957,<span class="hljs-string">-10</span>.0301,<span class="hljs-string">-6</span>.8618,<span class="hljs-string">-7</span>.5810,<span class="hljs-string">-13</span>.6721,<span class="hljs-string">-11</span>.4157
@@ -71,8 +100,12 @@ python antifold/main.py \
 </code></pre>
 <p>Output FASTA file with sampled sequences: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.fasta">6y1l_imgt.fasta</a></p>
 <ul>
-<li>Score: average log-odds of residues in the sampled region</li>
-<li>Global: average log-odds of all residues (IMGT positions 1-128)</li>
+<li>T: Temperature used for design</li>
+<li>score: average log-odds of residues in the sampled region</li>
+<li>global_score: average log-odds of all residues (IMGT positions 1-128)</li>
+<li>regions: regions selected for design</li>
+<li>seq_recovery: # mutations / total sequence length</li>
+<li>mutations: # mutations from original PDB sequence</li>
 </ul>
 <pre><code class="hljs fasta language-fasta">&gt;6y1l_imgt , <span class="hljs-attribute">score</span>=0.2934, <span class="hljs-attribute">global_score</span>=0.2934, regions=[<span class="hljs-string">&#x27;CDR1&#x27;</span>, <span class="hljs-string">&#x27;CDR2&#x27;</span>, <span class="hljs-string">&#x27;CDRH3&#x27;</span>], <span class="hljs-attribute">model_name</span>=AntiFold, <span class="hljs-attribute">seed</span>=42
 VQLQESGPGLVKPSETLSLTCAVSGYSISSGYYWGWIRQPPGKGLEWIGSIYHSGSTYYN
@@ -164,6 +197,12 @@ options:
   --verbose VERBOSE     Verbose printing
 </code></pre>
 <h2 id="imgt-regions-dict">IMGT regions dict</h2>
+<p>Used to specify which regions to mutate in an IMGT numbered PDB</p>
+<ul>
+<li>IMGT numbered PDBs: <a href="https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab">https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab</a></li>
+<li>Renumber existing PDBs with ANARCI: <a href="https://github.com/oxpig/ANARCI">https://github.com/oxpig/ANARCI</a></li>
+<li>Read more: <a href="https://www.imgt.org/IMGTScientificChart/Numbering/IMGTIGVLsuperfamily.html">https://www.imgt.org/IMGTScientificChart/Numbering/IMGTIGVLsuperfamily.html</a></li>
+</ul>
 <pre><code class="hljs python language-python">IMGT_dict = {
     <span class="hljs-string">&quot;all&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">128</span> + <span class="hljs-number">1</span>),
     <span class="hljs-string">&quot;allH&quot;</span>: <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, <span class="hljs-number">128</span> + <span class="hljs-number">1</span>),

@@ -4,37 +4,57 @@ AntiFold
 Code for AntiFold paper, accepted for [NeurIPS 2023 GenBio spotlight](https://openreview.net/forum?id=bxZMKHtlL6)
 
 Webserver: [OPIG webserver](https://opig.stats.ox.ac.uk/webapps/AntiFold/)
+
 Code: [antifold_code.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip)
+
 Model: [model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt)
+
+License: [BSD 3-Clause](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/LICENSE)
 
 # Colab
 To test the method out without installing it you can try this: [![Open In Colab](images/colab-badge.svg)](https://colab.research.google.com/drive/1TTfgjoZx3mzF5u4e9b4Un9Y7b_rqXc_4)
 
-## Quickstart guide
+## Install and run AntiFold
 
-See <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">Jupyter notebook</a> or follow quickstart guide with example PDBs:
+Use the <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/notebook.ipynb">Jupyter notebook</a> or follow this guide with example PDBs:
 
+### Download AntiFold
 ```bash
-# Download AntiFold model and code (Linux)
-mkdir -p antifold/models && cd antifold
-wget https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold.zip
-wget -P models/ https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt
-unzip antifold.zip
+# Download code
+mkdir -p antifold_code && cd antifold_code
+wget https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip
+unzip antifold_code.zip
 
-# Setup environment and install AntiFold (GPU)
-# Nb: For CPU use: conda install -c pytorch pytorch
+# Download model
+mkdir -p models
+wget -P models/ https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt
+```
+
+### Install AntiFold (CPU)
+```bash
 conda create --name antifold python=3.10 -y
 conda activate antifold
-conda install -c conda-forge pytorch-gpu # cudatoolkit=11.3 recommended
+conda install -c pytorch pytorch
 conda install -c pyg pyg -y
 conda install -c conda-forge pip -y
-
-# Install AntiFold
+# Install AntiFold from antifold_code directory
 pip install .
 ```
 
+### Install AntiFold (GPU)
 ```bash
-# Run on single PDB, CDRH3 only
+conda create --name antifold python=3.10 -y
+conda activate antifold
+conda install -c conda-forge pytorch-gpu
+conda install -c pyg pyg -y
+conda install -c conda-forge pip -y
+# Install AntiFold from antifold_code directory
+pip install .
+```
+
+### Run AntiFold (residue probabilities, embeddings, sampled sequences)
+```bash
+# Residue probabilities, sample 10 sequences in CDRH3 from single PDB
 python antifold/main.py \
     --out_dir output/single_pdb \
     --pdb_file data/pdbs/6y1l_imgt.pdb \
@@ -44,7 +64,7 @@ python antifold/main.py \
     --sampling_temp "0.2" \
     --regions "CDRH3"
 
-# Run on example pdbs, all CDRs, temperatures 0.20 and 0.30
+# Residue probabilities, sample 10 sequences at temperatures 0.20 & 0.30 in CDRs 1-3 from folder of PDBs
 python antifold/main.py \
     --out_dir output/example_pdbs \
     --pdbs_csv data/example_pdbs.csv \
@@ -53,7 +73,7 @@ python antifold/main.py \
     --sampling_temp "0.20 0.30" \
     --regions "CDR1 CDR2 CDR3"
 
-# Extract ESM-IF1 embeddings with custom chains
+# Extract ESM-IF1 embeddings from PDBs in folder, from all chains listed in untested.csv (not limited to VH/VL)
 python antifold/main.py \
     --out_dir output/untested/ \
     --pdbs_csv data/untested.csv \
@@ -63,8 +83,37 @@ python antifold/main.py \
     --extract_embeddings
 ```
 
+## Input parameters
+Required parameters:
+```text
+- Option 1: PDB file (--pdb_file) + specified heavy and light chain (--heavy_chain and --light_chain)
+- Option 2: PDB folder (--pdb_dir) + CSV file specifying chains (--pdbs_csv)
+- Output directory (--out_dir) for output inverse folding probabilities CSV and optional generated sequences FASTA
+```
+
+Parameters for generating new sequences:
+```text
+- Number of sequences to generate (--num_seq_per_target)
+- Region to mutate (--region) based on inverse folding probabilities. Select from list in IMGT_dict (e.g. 'CDRH1 CDRH2 CDRH3')
+- Sampling temperature (--sampling_temp) controls generated sequence diversity, by scaling the inverse folding probabilities before sampling. Temperature = 1 means no change, while temperature ~ 0 only samples the most likely amino-acid at each position (acts as argmax).
+```
+
+Optional parameters:
+```text
+- Multi-chain mode for including antigen or other chains (--custom_chain_mode) - Nb, experimental (see example above)
+- Extract latent representations of PDB within model (--extract_embeddings)
+- Use ESM-IF1 instead of AntiFold model weights (--model_path "ESM-IF1")
+```
+
 ## Example output
 Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a>
+- pdb_pos - PDB residue number
+- pdb_chain - PDB chain
+- aa_orig - PDB residue (e.g. 112)
+- aa_pred - Top predicted residue by AntiFold (argmax) for this position
+- pdb_posins - PDB residue number with insertion code (e.g. 112A)
+- perplexity - Inverse folding tolerance (higher is more tolerant) to mutations. See paper for more details.
+- Amino-acids - Inverse folding scores (log-likelihood) for the given position
 ```csv
 pdb_pos,pdb_chain,aa_orig,aa_pred,pdb_posins,perplexity,A,C,D,E,F,G,H,I,K,L,M,N,P,Q,R,S,T,V,W,Y
 2,H,V,M,2,1.6488,-4.9963,-6.6117,-6.3181,-6.3243,-6.7570,-4.2518,-6.7514,-5.2540,-6.8067,-5.8619,-0.0904,-6.5493,-4.8639,-6.6316,-6.3084,-5.1900,-5.0988,-3.7295,-8.0480,-7.3236
@@ -74,8 +123,12 @@ pdb_pos,pdb_chain,aa_orig,aa_pred,pdb_posins,perplexity,A,C,D,E,F,G,H,I,K,L,M,N,
 ```
 
 Output FASTA file with sampled sequences: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.fasta">6y1l_imgt.fasta</a>
-- Score: average log-odds of residues in the sampled region
-- Global: average log-odds of all residues (IMGT positions 1-128)
+- T: Temperature used for design
+- score: average log-odds of residues in the sampled region
+- global_score: average log-odds of all residues (IMGT positions 1-128)
+- regions: regions selected for design
+- seq_recovery: # mutations / total sequence length
+- mutations: # mutations from original PDB sequence
 ```fasta
 >6y1l_imgt , score=0.2934, global_score=0.2934, regions=['CDR1', 'CDR2', 'CDRH3'], model_name=AntiFold, seed=42
 VQLQESGPGLVKPSETLSLTCAVSGYSISSGYYWGWIRQPPGKGLEWIGSIYHSGSTYYN
@@ -174,6 +227,11 @@ options:
 ```
 
 ## IMGT regions dict
+Used to specify which regions to mutate in an IMGT numbered PDB
+- IMGT numbered PDBs: [https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab](https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabdab)
+- Renumber existing PDBs with ANARCI: [https://github.com/oxpig/ANARCI](https://github.com/oxpig/ANARCI)
+- Read more: [https://www.imgt.org/IMGTScientificChart/Numbering/IMGTIGVLsuperfamily.html](https://www.imgt.org/IMGTScientificChart/Numbering/IMGTIGVLsuperfamily.html)
+
 ```python
 IMGT_dict = {
     "all": range(1, 128 + 1),
