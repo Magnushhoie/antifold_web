@@ -39,6 +39,7 @@ conda install -c pyg pyg -y
 conda install -c conda-forge pip -y
 # Install AntiFold from antifold_code directory
 pip install .
+pip install torch-geometric==2.4.0
 ```
 
 ### Install AntiFold (GPU)
@@ -50,6 +51,7 @@ conda install -c pyg pyg -y
 conda install -c conda-forge pip -y
 # Install AntiFold from antifold_code directory
 pip install .
+pip install torch-geometric==2.4.0
 ```
 
 ### Run AntiFold (residue probabilities, embeddings, sampled sequences)

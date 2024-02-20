@@ -35,6 +35,7 @@ conda install -c pyg pyg -y
 conda install -c conda-forge pip -y
 <span class="hljs-comment"># Install AntiFold from antifold_code directory</span>
 pip install .
+pip install torch-geometric==2.4.0
 </code></pre>
 <h3 id="install-antifold-gpu">Install AntiFold (GPU)</h3>
 <pre><code class="hljs bash language-bash">conda create --name antifold python=3.10 -y
@@ -44,6 +45,7 @@ conda install -c pyg pyg -y
 conda install -c conda-forge pip -y
 <span class="hljs-comment"># Install AntiFold from antifold_code directory</span>
 pip install .
+pip install torch-geometric==2.4.0
 </code></pre>
 <h3 id="run-antifold-residue-probabilities-embeddings-sampled-sequences">Run AntiFold (residue probabilities, embeddings, sampled sequences)</h3>
 <pre><code class="hljs bash language-bash"><span class="hljs-comment"># Residue probabilities, sample 10 sequences in CDRH3 from single PDB</span>
@@ -65,21 +67,30 @@ python antifold/main.py \
     --sampling_temp <span class="hljs-string">&quot;0.20 0.30&quot;</span> \
     --regions <span class="hljs-string">&quot;CDR1 CDR2 CDR3&quot;</span>
 
-<span class="hljs-comment"># Extract AntiFold embeddings from PDBs in folder</span>
-python antifold/main.py \
-    --out_dir output/untested/ \
-    --pdbs_csv data/untested.csv \
-    --pdb_dir data/untested/ \
-    --extract_embeddings
-
 <span class="hljs-comment"># Extract ESM-IF1 embeddings from PDBs in folder, from all chains listed in untested.csv (not limited to VH/VL)</span>
 python antifold/main.py \
     --out_dir output/untested/ \
     --pdbs_csv data/untested.csv \
     --pdb_dir data/untested/ \
-    --model_path <span class="hljs-string">&quot;ESM-IF1&quot;</span> \
+    --use_esm_if1_weights \
     --custom_chain_mode \
     --extract_embeddings
+</code></pre>
+<h2 id="input-parameters">Input parameters</h2>
+<p>Required parameters:</p>
+<pre><code class="hljs text language-text">- Option 1: PDB file (--pdb_file) + specified heavy and light chain (--heavy_chain and --light_chain)
+- Option 2: PDB folder (--pdb_dir) + CSV file specifying chains (--pdbs_csv)
+- Output directory (--out_dir) for output inverse folding probabilities CSV and optional generated sequences FASTA
+</code></pre>
+<p>Parameters for generating new sequences:</p>
+<pre><code class="hljs text language-text">- Number of sequences to generate (--num_seq_per_target)
+- Region to mutate (--region) based on inverse folding probabilities. Select from list in IMGT_dict (e.g. &#x27;CDRH1 CDRH2 CDRH3&#x27;)
+- Sampling temperature (--sampling_temp) controls generated sequence diversity, by scaling the inverse folding probabilities before sampling. Temperature = 1 means no change, while temperature ~ 0 only samples the most likely amino-acid at each position (acts as argmax).
+</code></pre>
+<p>Optional parameters:</p>
+<pre><code class="hljs text language-text">- Multi-chain mode for including antigen or other chains (--custom_chain_mode) - Nb, experimental (see example above)
+- Extract latent representations of PDB within model (--extract_embeddings)
+- Use ESM-IF1 instead of AntiFold model weights (--model_path &quot;ESM-IF1&quot;)
 </code></pre>
 <h2 id="example-output">Example output</h2>
 <p>Output CSV with residue log-probabilities: Residue probabilities: <a href="https://opig.stats.ox.ac.uk/data/downloads/AntiFold/output/example_pdbs/6y1l_imgt.csv">6y1l_imgt.csv</a></p>
@@ -160,7 +171,7 @@ fasta_dict = pdb_output_dict[<span class="hljs-string">&quot;6y1l_imgt&quot;</sp
     <span class="hljs-comment"># Predict on example PDBs in folder</span>
     python antifold/main.py     --pdbs_csv data/example_pdbs.csv     --pdb_dir data/pdbs     --out_dir output/
 
-Predict antibody variable domain, inverse folding probabilities and sample sequences with maintained <span class="hljs-built_in">fold</span>.
+Predict inverse folding probabilities <span class="hljs-keyword">for</span> antibody variable domain, and sample sequences with maintained <span class="hljs-built_in">fold</span>.
 PDB structures should be IMGT-numbered, paired heavy and light chain variable domains (positions 1-128).
 
 For IMGT numbering PDBs use SAbDab or https://opig.stats.ox.ac.uk/webapps/sabdab-sabpred/sabpred/anarci/
@@ -179,7 +190,7 @@ options:
   --out_dir OUT_DIR     Output directory
   --regions REGIONS     Space-separated regions to mutate. Default <span class="hljs-string">&#x27;CDR1 CDR2 CDR3H&#x27;</span>
   --num_seq_per_target NUM_SEQ_PER_TARGET
-                        Number of sequences to sample from each antibody PDB
+                        Number of sequences to sample from each antibody PDB (default 0)
   --sampling_temp SAMPLING_TEMP
                         A string of temperatures e.g. <span class="hljs-string">&#x27;0.20 0.25 0.50&#x27;</span> (default 0.20). Sampling temperature <span class="hljs-keyword">for</span> amino acids. Suggested values 0.10, 0.15, 0.20, 0.25, 0.30. Higher values will lead to more diversity.
   --limit_variation     Limit variation to as many mutations as expected from temperature sampling
@@ -193,7 +204,9 @@ options:
                         Number of CPU threads to use <span class="hljs-keyword">for</span> parallel processing (0 = all available)
   --seed SEED           Seed <span class="hljs-keyword">for</span> reproducibility
   --model_path MODEL_PATH
-                        AntiFold model weights. Set to <span class="hljs-string">&#x27;ESM-IF1&#x27;</span> to use ESM-IF1 model instead of AntiFold fine-tuned model
+                        AntiFold model weights. See --use_esm_if1_weights flag to use ESM-IF1 weights instead of AntiFold
+  --use_esm_if1_weights
+                        Use ESM-IF1 weights instead of AntiFold
   --verbose VERBOSE     Verbose printing
 </code></pre>
 <h2 id="imgt-regions-dict">IMGT regions dict</h2>
