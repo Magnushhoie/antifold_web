@@ -223,7 +223,7 @@ def sample_pdbs(
         pdb_dir=pdb_dir,
         out_dir=out_dir,
         save_flag=save_flag,
-        batch_size=1,
+        batch_size=batch_size,
         extract_embeddings=extract_embeddings,
         custom_chain_mode=custom_chain_mode,
         seed=42,
