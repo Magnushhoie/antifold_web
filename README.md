@@ -1,7 +1,7 @@
 AntiFold
 ==============================
 
-Code for AntiFold paper, accepted for [NeurIPS 2023 GenBio spotlight](https://openreview.net/forum?id=bxZMKHtlL6)
+Code for AntiFold paper (unpublished)
 
 Webserver: [OPIG webserver](https://opig.stats.ox.ac.uk/webapps/AntiFold/)
 
