@@ -3,13 +3,9 @@ AntiFold
 
 Code for AntiFold paper (unpublished)
 
-Webserver: [OPIG webserver](https://opig.stats.ox.ac.uk/webapps/AntiFold/)
-
-Code: [antifold_code.zip](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/antifold_code.zip)
-
-Model: [model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt)
-
-License: [BSD 3-Clause](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/LICENSE)
+- AntiFold Webserver (OPIG): [https://opig.stats.ox.ac.uk/webapps/antifold/](https://opig.stats.ox.ac.uk/webapps/antifold/)
+- Model: [https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/models/model.pt)
+- License: [BSD 3-Clause](https://opig.stats.ox.ac.uk/data/downloads/AntiFold/LICENSE)
 
 # Colab
 To test the method out without installing it you can try this: [![Open In Colab](images/colab-badge.svg)](https://colab.research.google.com/drive/1TTfgjoZx3mzF5u4e9b4Un9Y7b_rqXc_4)
